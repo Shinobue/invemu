@@ -1,0 +1,18 @@
+#ignore vim temp files
+*.swp
+
+#ignore shortcuts
+*.lnk
+
+#ignore space invaders .zip as well as contents
+invaders.zip
+*.[efgh]
+
+#ignore my bat file
+*.bat
+
+#ignore .exe
+*.exe
+
+#ignore programming guides
+Programming Guides/
