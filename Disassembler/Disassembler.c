@@ -7,16 +7,12 @@ int Disassemble8080Op(unsigned char *, int pc);
 
 int main(){
     FILE *invaders;
-    unsigned char *bytePtr;
-    unsigned char byte;
     long int bufsize;
     unsigned char *buffer;
-    int i = 0;
-
-    bytePtr = &byte;
+    int pc = 0;
 
     //Open file in read binary mode. "r" by itself would be read text, which stops 0x1B from being read (it gets read as an EOF if the file is opened in text mode).
-    invaders = fopen("invaders.h", "rb");
+    invaders = fopen("InvadersFull", "rb");
     if (invaders == NULL){ printf("Error: File not found!"); return 1; }
 
     //Found the base for this fantastic solution at: https://stackoverflow.com/questions/2029103/correct-way-to-read-a-text-file-into-a-buffer-in-c
@@ -45,8 +41,8 @@ int main(){
 
     fclose(invaders);
 
-    while (i < bufsize){
-        i += Disassemble8080Op(buffer, i);
+    while (pc < bufsize){
+        pc += Disassemble8080Op(buffer, pc);
     }
 
     free(buffer);
