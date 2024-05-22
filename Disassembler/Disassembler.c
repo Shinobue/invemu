@@ -12,7 +12,7 @@ int main(){
     int pc = 0;
 
     //Open file in read binary mode. "r" by itself would be read text, which stops 0x1B from being read (it gets read as an EOF if the file is opened in text mode).
-    invaders = fopen("InvadersFull", "rb");
+    invaders = fopen("InvadersFull.h", "rb");
     if (invaders == NULL){ printf("Error: File not found!"); return 1; }
 
     //Found the base for this fantastic solution at: https://stackoverflow.com/questions/2029103/correct-way-to-read-a-text-file-into-a-buffer-in-c

@@ -249,7 +249,6 @@ void Emulate8080Op(State8080* state){
         case 0x11:  //LXI    D, word
             //Load register pair immediate
             //D <- Byte 3, E <- Byte 2
-
             state->d = opcode[2];
             state->e = opcode[1];
             state->pc += 2;
@@ -398,7 +397,6 @@ void Emulate8080Op(State8080* state){
         case 0x21:  //LXI    H, word
             //Load register pair immediate
             //H <- Byte 3, L <- Byte 2
-
             state->h = opcode[2];
             state->l = opcode[1];
             state->pc += 2;
@@ -672,70 +670,380 @@ void Emulate8080Op(State8080* state){
             //Complement carry
             state->cc.cy = ~(state->cc.cy);
             break;
-        case 0x40: UnimplementedInstruction(state); break;
-        case 0x41: UnimplementedInstruction(state); break;
-        case 0x42: UnimplementedInstruction(state); break;
-        case 0x43: UnimplementedInstruction(state); break;
-        case 0x44: UnimplementedInstruction(state); break;
-        case 0x45: UnimplementedInstruction(state); break;
-        case 0x46: UnimplementedInstruction(state); break;
-        case 0x47: UnimplementedInstruction(state); break;
-        case 0x48: UnimplementedInstruction(state); break;
-        case 0x49: UnimplementedInstruction(state); break;
-        case 0x4a: UnimplementedInstruction(state); break;
-        case 0x4b: UnimplementedInstruction(state); break;
-        case 0x4c: UnimplementedInstruction(state); break;
-        case 0x4d: UnimplementedInstruction(state); break;
-        case 0x4e: UnimplementedInstruction(state); break;
-        case 0x4f: UnimplementedInstruction(state); break;
-        case 0x50: UnimplementedInstruction(state); break;
-        case 0x51: UnimplementedInstruction(state); break;
-        case 0x52: UnimplementedInstruction(state); break;
-        case 0x53: UnimplementedInstruction(state); break;
-        case 0x54: UnimplementedInstruction(state); break;
-        case 0x55: UnimplementedInstruction(state); break;
-        case 0x56: UnimplementedInstruction(state); break;
-        case 0x57: UnimplementedInstruction(state); break;
-        case 0x58: UnimplementedInstruction(state); break;
-        case 0x59: UnimplementedInstruction(state); break;
-        case 0x5a: UnimplementedInstruction(state); break;
-        case 0x5b: UnimplementedInstruction(state); break;
-        case 0x5c: UnimplementedInstruction(state); break;
-        case 0x5d: UnimplementedInstruction(state); break;
-        case 0x5e: UnimplementedInstruction(state); break;
-        case 0x5f: UnimplementedInstruction(state); break;
-        case 0x60: UnimplementedInstruction(state); break;
-        case 0x61: UnimplementedInstruction(state); break;
-        case 0x62: UnimplementedInstruction(state); break;
-        case 0x63: UnimplementedInstruction(state); break;
-        case 0x64: UnimplementedInstruction(state); break;
-        case 0x65: UnimplementedInstruction(state); break;
-        case 0x66: UnimplementedInstruction(state); break;
-        case 0x67: UnimplementedInstruction(state); break;
-        case 0x68: UnimplementedInstruction(state); break;
-        case 0x69: UnimplementedInstruction(state); break;
-        case 0x6a: UnimplementedInstruction(state); break;
-        case 0x6b: UnimplementedInstruction(state); break;
-        case 0x6c: UnimplementedInstruction(state); break;
-        case 0x6d: UnimplementedInstruction(state); break;
-        case 0x6e: UnimplementedInstruction(state); break;
-        case 0x6f: UnimplementedInstruction(state); break;
-        case 0x70: UnimplementedInstruction(state); break;
-        case 0x71: UnimplementedInstruction(state); break;
-        case 0x72: UnimplementedInstruction(state); break;
-        case 0x73: UnimplementedInstruction(state); break;
-        case 0x74: UnimplementedInstruction(state); break;
-        case 0x75: UnimplementedInstruction(state); break;
-        case 0x76: UnimplementedInstruction(state); break;
-        case 0x77: UnimplementedInstruction(state); break;
-        case 0x78: UnimplementedInstruction(state); break;
-        case 0x79: UnimplementedInstruction(state); break;
-        case 0x7a: UnimplementedInstruction(state); break;
-        case 0x7b: UnimplementedInstruction(state); break;
-        case 0x7c: UnimplementedInstruction(state); break;
-        case 0x7d: UnimplementedInstruction(state); break;
-        case 0x7e: UnimplementedInstruction(state); break;
-        case 0x7f: UnimplementedInstruction(state); break;
+        case 0x40:  //MOV    B,B
+            //Move Register
+            //B <- B
+            state->b = state->b;
+            break;
+        case 0x41:  //MOV    B,C
+            //Move Register
+            //B <- C
+            state->b = state->c;
+            break;
+        case 0x42:  //MOV    B,D
+            //Move Register
+            //B <- D
+            state->b = state->d;
+            break;
+        case 0x43:  //MOV    B,E
+            //Move Register
+            //B <- E
+            state->b = state->e;
+            break;
+        case 0x44:  //MOV    B,H
+            //Move Register
+            //B <- H
+            state->b = state->h;
+            break;
+        case 0x45:  //MOV    B,L
+            //Move Register
+            //B <- L
+            state->b = state->l;
+            break;
+        case 0x46:  //MOV    B,M
+            //Move Register
+            //B <- (HL)
+            {
+            uint16_t offset;
+            offset = (state->h << 8) | state->l;
+            state->b = state->memory[offset];
+            }
+            break;
+        case 0x47:  //MOV    B,A
+            //Move Register
+            //B <- A
+            state->b = state->a;
+            break;
+        case 0x48:  //MOV    C,B
+            //Move Register
+            //C <- B
+            state->c = state->b;
+            break;
+        case 0x49:  //MOV    C,C
+            //Move Register
+            //C <- C
+            state->c = state->c;
+            break;
+        case 0x4a:  //MOV    C,D
+            //Move Register
+            //C <- D
+            state->c = state->d;
+            break;
+        case 0x4b:  //MOV    C,E
+            //Move Register
+            //C <- E
+            state->c = state->e;
+            break;
+        case 0x4c:  //MOV    C,H
+            //Move Register
+            //C <- H
+            state->c = state->h;
+            break;
+        case 0x4d:  //MOV    C,L
+            //Move Register
+            //C <- L
+            state->c = state->l;
+            break;
+        case 0x4e:  //MOV    C,M
+            //Move Register
+            //C <- (HL)
+            {
+            uint16_t offset;
+            offset = (state->h << 8) | state->l;
+            state->c = state->memory[offset];
+            }
+            break;
+        case 0x4f:  //MOV    C,A
+            //Move Register
+            //C <- A
+            state->c = state->a;
+            break;
+        case 0x50:  //MOV    D,B
+            //Move Register
+            //D <- B
+            state->d = state->b;
+            break;
+        case 0x51:  //MOV    D,C
+            //Move Register
+            //D <- C
+            state->d = state->c;
+            break;
+        case 0x52:  //MOV    D,D
+            //Move Register
+            //D <- D
+            state->d = state->d;
+            break;
+        case 0x53:  //MOV    D,E
+            //Move Register
+            //D <- E
+            state->d = state->e;
+            break;
+        case 0x54:  //MOV    D,H
+            //Move Register
+            //D <- H
+            state->d = state->h;
+            break;
+        case 0x55:  //MOV    D,L
+            //Move Register
+            //D <- L
+            state->d = state->l;
+            break;
+        case 0x56:  //MOV    D,M
+            //Move Register
+            //D <- (HL)
+            {
+            uint16_t offset;
+            offset = (state->h << 8) | state->l;
+            state->d = state->memory[offset];
+            }
+            break;
+        case 0x57:  //MOV    D,A
+            //Move Register
+            //D <- A
+            state->d = state->a;
+            break;
+        case 0x58:  //MOV    E,B
+            //Move Register
+            //E <- B
+            state->e = state->b;
+            break;
+        case 0x59:  //MOV    E,C
+            //Move Register
+            //E <- C
+            state->e = state->c;
+            break;
+        case 0x5a:  //MOV    E,D
+            //Move Register
+            //E <- D
+            state->e = state->d;
+            break;
+        case 0x5b:  //MOV    E,E
+            //Move Register
+            //E <- E
+            state->e = state->e;
+            break;
+        case 0x5c:  //MOV    E,H
+            //Move Register
+            //E <- H
+            state->e = state->h;
+            break;
+        case 0x5d:  //MOV    E,L
+            //Move Register
+            //E <- L
+            state->e = state->l;
+            break;
+        case 0x5e:  //MOV    E,M
+            //Move Register
+            //E <- (HL)
+            {
+            uint16_t offset;
+            offset = (state->h << 8) | state->l;
+            state->e = state->memory[offset];
+            }
+            break;
+        case 0x5f:  //MOV    E,A
+            //Move Register
+            //E <- A
+            state->e = state->a;
+            break;
+        case 0x60:  //MOV    H,B
+            //Move Register
+            //H <- B
+            state->h = state->b;
+            break;
+        case 0x61:  //MOV    H,C
+            //Move Register
+            //H <- C
+            state->h = state->c;
+            break;
+        case 0x62:  //MOV    H,D
+            //Move Register
+            //H <- D
+            state->h = state->d;
+            break;
+        case 0x63:  //MOV    H,E
+            //Move Register
+            //H <- E
+            state->h = state->e;
+            break;
+        case 0x64:  //MOV    H,H
+            //Move Register
+            //H <- H
+            state->h = state->h;
+            break;
+        case 0x65:  //MOV    H,L
+            //Move Register
+            //H <- L
+            state->h = state->l;
+            break;
+        case 0x66:  //MOV    H,M
+            //Move Register
+            //H <- (HL)
+            {
+            uint16_t offset;
+            offset = (state->h << 8) | state->l;
+            state->h = state->memory[offset];
+            }
+            break;
+        case 0x67:  //MOV    H,A
+            //Move Register
+            //H <- A
+            state->h = state->a;
+            break;
+        case 0x68:  //MOV    L,B
+            //Move Register
+            //L <- B
+            state->l = state->b;
+            break;
+        case 0x69:  //MOV    L,C
+            //Move Register
+            //L <- C
+            state->l = state->c;
+            break;
+        case 0x6a:  //MOV    L,D
+            //Move Register
+            //L <- D
+            state->l = state->d;
+            break;
+        case 0x6b:  //MOV    L,E
+            //Move Register
+            //L <- E
+            state->l = state->e;
+            break;
+        case 0x6c:  //MOV    L,H
+            //Move Register
+            //L <- H
+            state->l = state->h;
+            break;
+        case 0x6d:  //MOV    L,L
+            //Move Register
+            //L <- L
+            state->l = state->l;
+            break;
+        case 0x6e:  //MOV    L,M
+            //Move Register
+            //L <- (HL)
+            {
+            uint16_t offset;
+            offset = (state->h << 8) | state->l;
+            state->l = state->memory[offset];
+            }
+            break;
+        case 0x6f:  //MOV    L,A
+            //Move Register
+            //L <- A
+            state->l = state->a;
+            break;
+        case 0x70:  //MOV    M,B
+            //Move Register
+            //(HL) <- B
+            {
+            uint16_t offset;
+            offset = (state->h << 8) | state->l;
+            state->memory[offset] = state->b;
+            }
+            break;
+        case 0x71:  //MOV    M,C
+            //Move Register
+            //(HL) <- C
+            {
+            uint16_t offset;
+            offset = (state->h << 8) | state->l;
+            state->memory[offset] = state->c;
+            }
+            break;
+        case 0x72:  //MOV    M,D
+            //Move Register
+            //(HL) <- D
+            {
+            uint16_t offset;
+            offset = (state->h << 8) | state->l;
+            state->memory[offset] = state->d;
+            }
+            break;
+        case 0x73:  //MOV    M,E
+            //Move Register
+            //(HL) <- E
+            {
+            uint16_t offset;
+            offset = (state->h << 8) | state->l;
+            state->memory[offset] = state->e;
+            }
+            break;
+        case 0x74:  //MOV    M,H
+            //Move Register
+            //(HL) <- H
+            {
+            uint16_t offset;
+            offset = (state->h << 8) | state->l;
+            state->memory[offset] = state->h;
+            }
+            break;
+        case 0x75:  //MOV    M,L
+            //Move Register
+            //(HL) <- L
+            {
+            uint16_t offset;
+            offset = (state->h << 8) | state->l;
+            state->memory[offset] = state->l;
+            }
+            break;
+        case 0x76:  //HLT
+            exit(0);
+            break;
+        case 0x77:  //MOV    M,A
+            //Move Register
+            //(HL) <- A
+            {
+            uint16_t offset;
+            offset = (state->h << 8) | state->l;
+            state->memory[offset] = state->a;
+            }
+            break;
+        case 0x78:  //MOV    A,B
+            //Move Register
+            //A <- B
+            state->a = state->b;
+            break;
+        case 0x79:  //MOV    A,C
+            //Move Register
+            //A <- C
+            state->a = state->c;
+            break;
+        case 0x7a:  //MOV    A,D
+            //Move Register
+            //A <- D
+            state->a = state->d;
+            break;
+        case 0x7b:  //MOV    A,E
+            //Move Register
+            //A <- E
+            state->a = state->e;
+            break;
+        case 0x7c:  //MOV    A,H
+            //Move Register
+            //A <- H
+            state->a = state->h;
+            break;
+        case 0x7d:  //MOV    A,L
+            //Move Register
+            //A <- L
+            state->a = state->l;
+            break;
+        case 0x7e:  //MOV    A,M
+            //Move Register
+            //A <- (HL)
+            {
+            uint16_t offset;
+            offset = (state->h << 8) | state->l;
+            state->a = state->memory[offset];
+            }
+            break;
+        case 0x7f:  //MOV    A,A
+            //Move Register
+            //A <- A
+            state->a = state->a;
+            break;
         case 0x80:  //ADD    B
             //Add memory
             //A <- A + B
@@ -885,7 +1193,7 @@ void Emulate8080Op(State8080* state){
 }
 
 int Parity(uint8_t result){
-    //Parity flag is set if the sum of the 1 bits in the result of the operation is even, cleared if it is odd. E.g if the result is 1000 0111, you have 4 ones (even), so the flag is set.
+    //Parity flag is set (meaning set to 1) if the sum of the 1 bits in the result of the operation is even, cleared (meaning set to 0) if it is odd. E.g if the result is 1000 0111, you have four 1s (even), so the flag is set.
 
     int count = 0; //"1"s so far
     int i = 0;
