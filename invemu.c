@@ -38,10 +38,10 @@ int main(){
 
     int RAMoffset;
 
-    //Init State8080.
+    //Init State8080 and program counter.
     State8080 mystate;
-
     State8080 *state = &mystate;
+
     state->pc = 0;
 
     //Allocate 64K. 8K is used for the ROM, 8K for the RAM (of which 7K is VRAM). Processor has an address width of 16 bits however, so 2^16 = 65536 possible addresses.
@@ -1954,7 +1954,21 @@ void Emulate8080Op(State8080* state){
         case 0xc3: UnimplementedInstruction(state); break;
         case 0xc4: UnimplementedInstruction(state); break;
         case 0xc5: UnimplementedInstruction(state); break;
-        case 0xc6: UnimplementedInstruction(state); break;
+        case 0xc6:  //ADI    D8
+            //Add Immediate
+            //A <- A + byte 2
+            {
+            uint16_t result;
+            result = state->a + opcode[1];
+            state->cc.z = ((result & 0xff) == 0);
+            state->cc.s = ((result & 0x80) != 0);
+            state->cc.p = Parity((uint8_t) (result & 0xff));
+            state->cc.cy = (result > 0xff);
+            state->a = result & 0xff;
+            state->pc += 1;
+            }
+            //Note: auxiliary carry not implemented.
+            break;
         case 0xc7: UnimplementedInstruction(state); break;
         case 0xc8: UnimplementedInstruction(state); break;
         case 0xc9: UnimplementedInstruction(state); break;
@@ -1962,7 +1976,21 @@ void Emulate8080Op(State8080* state){
         case 0xcb: UnimplementedInstruction(state); break;
         case 0xcc: UnimplementedInstruction(state); break;
         case 0xcd: UnimplementedInstruction(state); break;
-        case 0xce: UnimplementedInstruction(state); break;
+        case 0xce:  //ACI    D8
+            //Add Immediate with carry
+            //A <- A + byte 2 + CY
+            {
+            uint16_t result;
+            result = state->a + opcode[1] + state->cc.cy;
+            state->cc.z = ((result & 0xff) == 0);
+            state->cc.s = ((result & 0x80) != 0);
+            state->cc.p = Parity((uint8_t) (result & 0xff));
+            state->cc.cy = (result > 0xff);
+            state->a = result & 0xff;
+            state->pc += 1;
+            }
+            //Note: auxiliary carry not implemented.
+            break;
         case 0xcf: UnimplementedInstruction(state); break;
         case 0xd0: UnimplementedInstruction(state); break;
         case 0xd1: UnimplementedInstruction(state); break;
@@ -1970,7 +1998,21 @@ void Emulate8080Op(State8080* state){
         case 0xd3: UnimplementedInstruction(state); break;
         case 0xd4: UnimplementedInstruction(state); break;
         case 0xd5: UnimplementedInstruction(state); break;
-        case 0xd6: UnimplementedInstruction(state); break;
+        case 0xd6:  //SUI    D8
+            //Subtract Immediate
+            //A <- A - byte 2
+            {
+            uint16_t result;
+            result = state->a - opcode[1];
+            state->cc.z = ((result & 0xff) == 0);
+            state->cc.s = ((result & 0x80) != 0);
+            state->cc.p = Parity((uint8_t) (result & 0xff));
+            state->cc.cy = (result > 0xff);
+            state->a = result & 0xff;
+            state->pc += 1;
+            }
+            //Note: auxiliary carry not implemented.
+            break;
         case 0xd7: UnimplementedInstruction(state); break;
         case 0xd8: UnimplementedInstruction(state); break;
         case 0xd9: UnimplementedInstruction(state); break;
@@ -1978,7 +2020,21 @@ void Emulate8080Op(State8080* state){
         case 0xdb: UnimplementedInstruction(state); break;
         case 0xdc: UnimplementedInstruction(state); break;
         case 0xdd: UnimplementedInstruction(state); break;
-        case 0xde: UnimplementedInstruction(state); break;
+        case 0xde:  //SBI    D8
+            //Subtract Immediate with borrow
+            //A <- A - byte 2 - CY
+            {
+            uint16_t result;
+            result = state->a - opcode[1] - state->cc.cy;
+            state->cc.z = ((result & 0xff) == 0);
+            state->cc.s = ((result & 0x80) != 0);
+            state->cc.p = Parity((uint8_t) (result & 0xff));
+            state->cc.cy = (result > 0xff);
+            state->a = result & 0xff;
+            state->pc += 1;
+            }
+            //Note: auxiliary carry not implemented.
+            break;
         case 0xdf: UnimplementedInstruction(state); break;
         case 0xe0: UnimplementedInstruction(state); break;
         case 0xe1: UnimplementedInstruction(state); break;
@@ -1986,7 +2042,21 @@ void Emulate8080Op(State8080* state){
         case 0xe3: UnimplementedInstruction(state); break;
         case 0xe4: UnimplementedInstruction(state); break;
         case 0xe5: UnimplementedInstruction(state); break;
-        case 0xe6: UnimplementedInstruction(state); break;
+        case 0xe6:  //ANI    D8
+            //AND Immediate
+            //A <- A & byte 2
+            {
+            uint16_t result;
+            result = state->a & opcode[1];
+            state->cc.z = ((result & 0xff) == 0);
+            state->cc.s = ((result & 0x80) != 0);
+            state->cc.p = Parity((uint8_t) (result & 0xff));
+            state->cc.cy = (result > 0xff);
+            state->a = result & 0xff;
+            state->pc += 1;
+            }
+            //Note: auxiliary carry not implemented.
+            break;
         case 0xe7: UnimplementedInstruction(state); break;
         case 0xe8: UnimplementedInstruction(state); break;
         case 0xe9: UnimplementedInstruction(state); break;
@@ -1994,7 +2064,21 @@ void Emulate8080Op(State8080* state){
         case 0xeb: UnimplementedInstruction(state); break;
         case 0xec: UnimplementedInstruction(state); break;
         case 0xed: UnimplementedInstruction(state); break;
-        case 0xee: UnimplementedInstruction(state); break;
+        case 0xee:  //XRI    D8
+            //Exclusive OR Immediate
+            //A <- A ^ byte 2
+            {
+            uint16_t result;
+            result = state->a ^ opcode[1];
+            state->cc.z = ((result & 0xff) == 0);
+            state->cc.s = ((result & 0x80) != 0);
+            state->cc.p = Parity((uint8_t) (result & 0xff));
+            state->cc.cy = 0x0;
+            state->cc.ac = 0x0;
+            state->a = result & 0xff;
+            state->pc += 1;
+            }
+            break;
         case 0xef: UnimplementedInstruction(state); break;
         case 0xf0: UnimplementedInstruction(state); break;
         case 0xf1: UnimplementedInstruction(state); break;
@@ -2002,7 +2086,21 @@ void Emulate8080Op(State8080* state){
         case 0xf3: UnimplementedInstruction(state); break;
         case 0xf4: UnimplementedInstruction(state); break;
         case 0xf5: UnimplementedInstruction(state); break;
-        case 0xf6: UnimplementedInstruction(state); break;
+        case 0xf6:  //ORI    D8
+            //OR Immediate
+            //A <- A | byte 2
+            {
+            uint16_t result;
+            result = state->a | opcode[1];
+            state->cc.z = ((result & 0xff) == 0);
+            state->cc.s = ((result & 0x80) != 0);
+            state->cc.p = Parity((uint8_t) (result & 0xff));
+            state->cc.cy = (result > 0xff);
+            state->a = result & 0xff;
+            state->pc += 1;
+            }
+            //Note: auxiliary carry not implemented.
+            break;
         case 0xf7: UnimplementedInstruction(state); break;
         case 0xf8: UnimplementedInstruction(state); break;
         case 0xf9: UnimplementedInstruction(state); break;
@@ -2010,7 +2108,20 @@ void Emulate8080Op(State8080* state){
         case 0xfb: UnimplementedInstruction(state); break;
         case 0xfc: UnimplementedInstruction(state); break;
         case 0xfd: UnimplementedInstruction(state); break;
-        case 0xfe: UnimplementedInstruction(state); break;
+        case 0xfe:  //CPI    D8
+            //Compare Immediate
+            //A - byte 2
+            {
+            uint16_t result;
+            result = state->a - opcode[1];
+            state->cc.z = ((result & 0xff) == 0);
+            state->cc.s = ((result & 0x80) != 0);
+            state->cc.p = Parity((uint8_t) (result & 0xff));
+            state->cc.cy = (result > 0xff);
+            state->pc += 1;
+            }
+            //Note: auxiliary carry not implemented.
+            break;
         case 0xff: UnimplementedInstruction(state); break;
 
 
