@@ -12,8 +12,8 @@ int main(){
     int pc = 0;
 
     //Open file in read binary mode. "r" by itself would be read text, which stops 0x1B from being read (it gets read as an EOF if the file is opened in text mode).
-    invaders = fopen("InvadersFull.h", "rb");
-    if (invaders == NULL){ printf("Error: File not found!"); return 1; }
+    invaders = fopen("..\\Place Game ROM Here\\InvadersFull.h", "rb");
+    if (invaders == NULL){printf("Error: File not found!"); return 1;}
 
     //Found the base for this fantastic solution at: https://stackoverflow.com/questions/2029103/correct-way-to-read-a-text-file-into-a-buffer-in-c
 
@@ -23,13 +23,13 @@ int main(){
         bufsize = ftell(invaders);
 
         //Error checking.
-        if (bufsize == -1){ printf("Error: could not create buffer size!\n"); }
+        if (bufsize == -1){printf("Error: could not create buffer size!\n");}
 
         //Allocate a buffer of the size of the file (a buffer to store each byte).
         buffer = malloc(sizeof(char) * bufsize);
 
         //Go back to the start of the file.
-        if (fseek(invaders, 0L, SEEK_SET) != 0){ printf("Error: could not set the file pointer to the start of the file!\n"); }
+        if (fseek(invaders, 0L, SEEK_SET) != 0){printf("Error: could not set the file pointer to the start of the file!\n");}
     
         //Read the entire file into memory (into the buffer).
         fread(buffer, sizeof(char), bufsize, invaders);
@@ -62,7 +62,7 @@ int Disassemble8080Op(unsigned char *codebuffer, int pc)
 {
     unsigned char *code = &codebuffer[pc];
     int opbytes = 1;
-    printf ("%04x ", pc);
+    printf("%04x ", pc);
     switch (*code)
     {
         case 0x00: printf("NOP"); break;

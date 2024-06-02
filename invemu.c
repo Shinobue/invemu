@@ -56,7 +56,7 @@ int main(){
     printf("\nRAMoffset = %d\n\n\n", RAMoffset);
 
     i = 0;
-    while (i < 1000){
+    while (i < 0x1350){
         Emulate8080Op(state);
         i += 1;
     }
@@ -147,7 +147,7 @@ void Emulate8080Op(State8080* state){
             {
             uint16_t result;
             result = state->b - 1;
-            state->cc.z = ((result & 0xff) == 0);            
+            state->cc.z = ((result & 0xff) == 0);
             state->cc.s = ((result & 0x80) != 0);
             state->cc.p = Parity((uint8_t) (result & 0xff));
             state->b = result & 0xff;
@@ -224,7 +224,7 @@ void Emulate8080Op(State8080* state){
             {
             uint16_t result;
             result = state->c - 1;
-            state->cc.z = ((result & 0xff) == 0);            
+            state->cc.z = ((result & 0xff) == 0);
             state->cc.s = ((result & 0x80) != 0);
             state->cc.p = Parity((uint8_t) (result & 0xff));
             state->c = result & 0xff;
@@ -289,7 +289,7 @@ void Emulate8080Op(State8080* state){
             {
             uint16_t result;
             result = state->d - 1;
-            state->cc.z = ((result & 0xff) == 0);            
+            state->cc.z = ((result & 0xff) == 0);
             state->cc.s = ((result & 0x80) != 0);
             state->cc.p = Parity((uint8_t) (result & 0xff));
             state->d = result & 0xff;
@@ -368,7 +368,7 @@ void Emulate8080Op(State8080* state){
             {
             uint16_t result;
             result = state->e - 1;
-            state->cc.z = ((result & 0xff) == 0);            
+            state->cc.z = ((result & 0xff) == 0);
             state->cc.s = ((result & 0x80) != 0);
             state->cc.p = Parity((uint8_t) (result & 0xff));
             state->e = result & 0xff;
@@ -439,7 +439,7 @@ void Emulate8080Op(State8080* state){
             {
             uint16_t result;
             result = state->h - 1;
-            state->cc.z = ((result & 0xff) == 0);            
+            state->cc.z = ((result & 0xff) == 0);
             state->cc.s = ((result & 0x80) != 0);
             state->cc.p = Parity((uint8_t) (result & 0xff));
             state->h = result & 0xff;
@@ -514,7 +514,7 @@ void Emulate8080Op(State8080* state){
             {
             uint16_t result;
             result = state->l - 1;
-            state->cc.z = ((result & 0xff) == 0);            
+            state->cc.z = ((result & 0xff) == 0);
             state->cc.s = ((result & 0x80) != 0);
             state->cc.p = Parity((uint8_t) (result & 0xff));
             state->l = result & 0xff;
@@ -579,7 +579,7 @@ void Emulate8080Op(State8080* state){
             uint16_t offset;
             offset = (state->h << 8) | state->l;
             result = state->h - 1;
-            state->cc.z = ((result & 0xff) == 0);            
+            state->cc.z = ((result & 0xff) == 0);
             state->cc.s = ((result & 0x80) != 0);
             state->cc.p = Parity((uint8_t) (result & 0xff));
             state->memory[offset] = result & 0xff;
@@ -653,7 +653,7 @@ void Emulate8080Op(State8080* state){
             {
             uint16_t result;
             result = state->a - 1;
-            state->cc.z = ((result & 0xff) == 0);            
+            state->cc.z = ((result & 0xff) == 0);
             state->cc.s = ((result & 0x80) != 0);
             state->cc.p = Parity((uint8_t) (result & 0xff));
             state->a = result & 0xff;
@@ -701,7 +701,7 @@ void Emulate8080Op(State8080* state){
             state->b = state->l;
             break;
         case 0x46:  //MOV    B,M
-            //Move Register
+            //Move from memory
             //B <- (HL)
             {
             uint16_t offset;
@@ -745,7 +745,7 @@ void Emulate8080Op(State8080* state){
             state->c = state->l;
             break;
         case 0x4e:  //MOV    C,M
-            //Move Register
+            //Move from memory
             //C <- (HL)
             {
             uint16_t offset;
@@ -789,7 +789,7 @@ void Emulate8080Op(State8080* state){
             state->d = state->l;
             break;
         case 0x56:  //MOV    D,M
-            //Move Register
+            //Move from memory
             //D <- (HL)
             {
             uint16_t offset;
@@ -833,7 +833,7 @@ void Emulate8080Op(State8080* state){
             state->e = state->l;
             break;
         case 0x5e:  //MOV    E,M
-            //Move Register
+            //Move from memory
             //E <- (HL)
             {
             uint16_t offset;
@@ -877,7 +877,7 @@ void Emulate8080Op(State8080* state){
             state->h = state->l;
             break;
         case 0x66:  //MOV    H,M
-            //Move Register
+            //Move from memory
             //H <- (HL)
             {
             uint16_t offset;
@@ -921,7 +921,7 @@ void Emulate8080Op(State8080* state){
             state->l = state->l;
             break;
         case 0x6e:  //MOV    L,M
-            //Move Register
+            //Move from memory
             //L <- (HL)
             {
             uint16_t offset;
@@ -989,7 +989,7 @@ void Emulate8080Op(State8080* state){
             }
             break;
         case 0x76:  //HLT
-            exit(0);
+            //exit(0);
             break;
         case 0x77:  //MOV    M,A
             //Move Register
@@ -1031,7 +1031,7 @@ void Emulate8080Op(State8080* state){
             state->a = state->l;
             break;
         case 0x7e:  //MOV    A,M
-            //Move Register
+            //Move from memory
             //A <- (HL)
             {
             uint16_t offset;
@@ -1045,81 +1045,909 @@ void Emulate8080Op(State8080* state){
             state->a = state->a;
             break;
         case 0x80:  //ADD    B
-            //Add memory
+            //Add Register
             //A <- A + B
             {
             uint16_t result;
             result = state->a + state->b;
-            state->cc.z = ((result & 0xff) == 0);            
+            state->cc.z = ((result & 0xff) == 0);
             state->cc.s = ((result & 0x80) != 0);
             state->cc.p = Parity((uint8_t) (result & 0xff));
             state->cc.cy = (result > 0xff);
             state->a = result & 0xff;
             }
+            //Note: auxiliary carry not implemented.
             break;
-        case 0x81: UnimplementedInstruction(state); break;
-        case 0x82: UnimplementedInstruction(state); break;
-        case 0x83: UnimplementedInstruction(state); break;
-        case 0x84: UnimplementedInstruction(state); break;
-        case 0x85: UnimplementedInstruction(state); break;
-        case 0x86: UnimplementedInstruction(state); break;
-        case 0x87: UnimplementedInstruction(state); break;
-        case 0x88: UnimplementedInstruction(state); break;
-        case 0x89: UnimplementedInstruction(state); break;
-        case 0x8a: UnimplementedInstruction(state); break;
-        case 0x8b: UnimplementedInstruction(state); break;
-        case 0x8c: UnimplementedInstruction(state); break;
-        case 0x8d: UnimplementedInstruction(state); break;
-        case 0x8e: UnimplementedInstruction(state); break;
-        case 0x8f: UnimplementedInstruction(state); break;
-        case 0x90: UnimplementedInstruction(state); break;
-        case 0x91: UnimplementedInstruction(state); break;
-        case 0x92: UnimplementedInstruction(state); break;
-        case 0x93: UnimplementedInstruction(state); break;
-        case 0x94: UnimplementedInstruction(state); break;
-        case 0x95: UnimplementedInstruction(state); break;
-        case 0x96: UnimplementedInstruction(state); break;
-        case 0x97: UnimplementedInstruction(state); break;
-        case 0x98: UnimplementedInstruction(state); break;
-        case 0x99: UnimplementedInstruction(state); break;
-        case 0x9a: UnimplementedInstruction(state); break;
-        case 0x9b: UnimplementedInstruction(state); break;
-        case 0x9c: UnimplementedInstruction(state); break;
-        case 0x9d: UnimplementedInstruction(state); break;
-        case 0x9e: UnimplementedInstruction(state); break;
-        case 0x9f: UnimplementedInstruction(state); break;
-        case 0xa0: UnimplementedInstruction(state); break;
-        case 0xa1: UnimplementedInstruction(state); break;
-        case 0xa2: UnimplementedInstruction(state); break;
-        case 0xa3: UnimplementedInstruction(state); break;
-        case 0xa4: UnimplementedInstruction(state); break;
-        case 0xa5: UnimplementedInstruction(state); break;
-        case 0xa6: UnimplementedInstruction(state); break;
-        case 0xa7: UnimplementedInstruction(state); break;
-        case 0xa8: UnimplementedInstruction(state); break;
-        case 0xa9: UnimplementedInstruction(state); break;
-        case 0xaa: UnimplementedInstruction(state); break;
-        case 0xab: UnimplementedInstruction(state); break;
-        case 0xac: UnimplementedInstruction(state); break;
-        case 0xad: UnimplementedInstruction(state); break;
-        case 0xae: UnimplementedInstruction(state); break;
-        case 0xaf: UnimplementedInstruction(state); break;
-        case 0xb0: UnimplementedInstruction(state); break;
-        case 0xb1: UnimplementedInstruction(state); break;
-        case 0xb2: UnimplementedInstruction(state); break;
-        case 0xb3: UnimplementedInstruction(state); break;
-        case 0xb4: UnimplementedInstruction(state); break;
-        case 0xb5: UnimplementedInstruction(state); break;
-        case 0xb6: UnimplementedInstruction(state); break;
-        case 0xb7: UnimplementedInstruction(state); break;
-        case 0xb8: UnimplementedInstruction(state); break;
-        case 0xb9: UnimplementedInstruction(state); break;
-        case 0xba: UnimplementedInstruction(state); break;
-        case 0xbb: UnimplementedInstruction(state); break;
-        case 0xbc: UnimplementedInstruction(state); break;
-        case 0xbd: UnimplementedInstruction(state); break;
-        case 0xbe: UnimplementedInstruction(state); break;
-        case 0xbf: UnimplementedInstruction(state); break;
+        case 0x81:  //ADD    C
+            //Add Register
+            //A <- A + C
+            {
+            uint16_t result;
+            result = state->a + state->c;
+            state->cc.z = ((result & 0xff) == 0);
+            state->cc.s = ((result & 0x80) != 0);
+            state->cc.p = Parity((uint8_t) (result & 0xff));
+            state->cc.cy = (result > 0xff);
+            state->a = result & 0xff;
+            }
+            //Note: auxiliary carry not implemented.
+            break;
+        case 0x82:  //ADD    D
+            //Add Register
+            //A <- A + D
+            {
+            uint16_t result;
+            result = state->a + state->d;
+            state->cc.z = ((result & 0xff) == 0);
+            state->cc.s = ((result & 0x80) != 0);
+            state->cc.p = Parity((uint8_t) (result & 0xff));
+            state->cc.cy = (result > 0xff);
+            state->a = result & 0xff;
+            }
+            //Note: auxiliary carry not implemented.
+            break;
+        case 0x83:  //ADD    E
+            //Add Register
+            //A <- A + E
+            {
+            uint16_t result;
+            result = state->a + state->e;
+            state->cc.z = ((result & 0xff) == 0);
+            state->cc.s = ((result & 0x80) != 0);
+            state->cc.p = Parity((uint8_t) (result & 0xff));
+            state->cc.cy = (result > 0xff);
+            state->a = result & 0xff;
+            }
+            //Note: auxiliary carry not implemented.
+            break;
+        case 0x84:  //ADD    H
+            //Add Register
+            //A <- A + H
+            {
+            uint16_t result;
+            result = state->a + state->h;
+            state->cc.z = ((result & 0xff) == 0);
+            state->cc.s = ((result & 0x80) != 0);
+            state->cc.p = Parity((uint8_t) (result & 0xff));
+            state->cc.cy = (result > 0xff);
+            state->a = result & 0xff;
+            }
+            //Note: auxiliary carry not implemented.
+            break;
+        case 0x85:  //ADD    L
+            //Add Register
+            //A <- A + L
+            {
+            uint16_t result;
+            result = state->a + state->l;
+            state->cc.z = ((result & 0xff) == 0);
+            state->cc.s = ((result & 0x80) != 0);
+            state->cc.p = Parity((uint8_t) (result & 0xff));
+            state->cc.cy = (result > 0xff);
+            state->a = result & 0xff;
+            }
+            //Note: auxiliary carry not implemented.
+            break;
+        case 0x86:  //ADD    M
+            //Add memory
+            //A <- A + (HL)
+            {
+            uint16_t result;
+            uint16_t offset;
+            offset = (state->h << 8) | state->l;
+            result = state->a + state->memory[offset];
+            state->cc.z = ((result & 0xff) == 0);
+            state->cc.s = ((result & 0x80) != 0);
+            state->cc.p = Parity((uint8_t) (result & 0xff));
+            state->cc.cy = (result > 0xff);
+            state->a = result & 0xff;
+            }
+            //Note: auxiliary carry not implemented.
+            break;
+        case 0x87:  //ADD    A
+            //Add Register
+            //A <- A + A
+            {
+            uint16_t result;
+            result = state->a + state->a;
+            state->cc.z = ((result & 0xff) == 0);
+            state->cc.s = ((result & 0x80) != 0);
+            state->cc.p = Parity((uint8_t) (result & 0xff));
+            state->cc.cy = (result > 0xff);
+            state->a = result & 0xff;
+            }
+            //Note: auxiliary carry not implemented.
+            break;
+        case 0x88:  //ADC    B
+            //Add Register with carry
+            //A <- A + B + CY
+            {
+            uint16_t result;
+            result = state->a + state->b + state->cc.cy;
+            state->cc.z = ((result & 0xff) == 0);
+            state->cc.s = ((result & 0x80) != 0);
+            state->cc.p = Parity((uint8_t) (result & 0xff));
+            state->cc.cy = (result > 0xff);
+            state->a = result & 0xff;
+            }
+            //Note: auxiliary carry not implemented.
+            break;
+        case 0x89:  //ADC    C
+            //Add Register with carry
+            //A <- A + C + CY
+            {
+            uint16_t result;
+            result = state->a + state->c + state->cc.cy;
+            state->cc.z = ((result & 0xff) == 0);
+            state->cc.s = ((result & 0x80) != 0);
+            state->cc.p = Parity((uint8_t) (result & 0xff));
+            state->cc.cy = (result > 0xff);
+            state->a = result & 0xff;
+            }
+            //Note: auxiliary carry not implemented.
+            break;
+        case 0x8a:  //ADC    D
+            //Add Register with carry
+            //A <- A + D + CY
+            {
+            uint16_t result;
+            result = state->a + state->d + state->cc.cy;
+            state->cc.z = ((result & 0xff) == 0);
+            state->cc.s = ((result & 0x80) != 0);
+            state->cc.p = Parity((uint8_t) (result & 0xff));
+            state->cc.cy = (result > 0xff);
+            state->a = result & 0xff;
+            }
+            //Note: auxiliary carry not implemented.
+            break;
+        case 0x8b:  //ADC    E
+            //Add Register with carry
+            //A <- A + E + CY
+            {
+            uint16_t result;
+            result = state->a + state->e + state->cc.cy;
+            state->cc.z = ((result & 0xff) == 0);
+            state->cc.s = ((result & 0x80) != 0);
+            state->cc.p = Parity((uint8_t) (result & 0xff));
+            state->cc.cy = (result > 0xff);
+            state->a = result & 0xff;
+            }
+            //Note: auxiliary carry not implemented.
+            break;
+        case 0x8c:  //ADC    H
+            //Add Register with carry
+            //A <- A + H + CY
+            {
+            uint16_t result;
+            result = state->a + state->h + state->cc.cy;
+            state->cc.z = ((result & 0xff) == 0);
+            state->cc.s = ((result & 0x80) != 0);
+            state->cc.p = Parity((uint8_t) (result & 0xff));
+            state->cc.cy = (result > 0xff);
+            state->a = result & 0xff;
+            }
+            //Note: auxiliary carry not implemented.
+            break;
+        case 0x8d:  //ADC    L
+            //Add Register with carry
+            //A <- A + L + CY
+            {
+            uint16_t result;
+            result = state->a + state->l + state->cc.cy;
+            state->cc.z = ((result & 0xff) == 0);
+            state->cc.s = ((result & 0x80) != 0);
+            state->cc.p = Parity((uint8_t) (result & 0xff));
+            state->cc.cy = (result > 0xff);
+            state->a = result & 0xff;
+            }
+            //Note: auxiliary carry not implemented.
+            break;
+        case 0x8e:  //ADC    M
+            //Add memory with carry
+            //A <- A + (HL) + CY
+            {
+            uint16_t result;
+            uint16_t offset;
+            offset = (state->h << 8) | state->l;
+            result = state->a + state->memory[offset] + state->cc.cy;
+            state->cc.z = ((result & 0xff) == 0);
+            state->cc.s = ((result & 0x80) != 0);
+            state->cc.p = Parity((uint8_t) (result & 0xff));
+            state->cc.cy = (result > 0xff);
+            state->a = result & 0xff;
+            }
+            //Note: auxiliary carry not implemented.
+            break;
+        case 0x8f:  //ADC    A
+            //Add Register with carry
+            //A <- A + A + CY
+            {
+            uint16_t result;
+            result = state->a + state->a + state->cc.cy;
+            state->cc.z = ((result & 0xff) == 0);
+            state->cc.s = ((result & 0x80) != 0);
+            state->cc.p = Parity((uint8_t) (result & 0xff));
+            state->cc.cy = (result > 0xff);
+            state->a = result & 0xff;
+            }
+            //Note: auxiliary carry not implemented.
+            break;
+        case 0x90:  //SUB    B
+            //Subtract Register
+            //A <- A - B
+            {
+            uint16_t result;
+            result = state->a - state->b;
+            state->cc.z = ((result & 0xff) == 0);
+            state->cc.s = ((result & 0x80) != 0);
+            state->cc.p = Parity((uint8_t) (result & 0xff));
+            state->cc.cy = (result > 0xff);
+            state->a = result & 0xff;
+            }
+            //Note: auxiliary carry not implemented.
+            break;
+        case 0x91:  //SUB    C
+            //Subtract Register
+            //A <- A - C
+            {
+            uint16_t result;
+            result = state->a - state->c;
+            state->cc.z = ((result & 0xff) == 0);
+            state->cc.s = ((result & 0x80) != 0);
+            state->cc.p = Parity((uint8_t) (result & 0xff));
+            state->cc.cy = (result > 0xff);
+            state->a = result & 0xff;
+            }
+            //Note: auxiliary carry not implemented.
+            break;
+        case 0x92:  //SUB    D
+            //Subtract Register
+            //A <- A - D
+            {
+            uint16_t result;
+            result = state->a - state->d;
+            state->cc.z = ((result & 0xff) == 0);
+            state->cc.s = ((result & 0x80) != 0);
+            state->cc.p = Parity((uint8_t) (result & 0xff));
+            state->cc.cy = (result > 0xff);
+            state->a = result & 0xff;
+            }
+            //Note: auxiliary carry not implemented.
+            break;
+        case 0x93:  //SUB    E
+            //Subtract Register
+            //A <- A - E
+            {
+            uint16_t result;
+            result = state->a - state->e;
+            state->cc.z = ((result & 0xff) == 0);
+            state->cc.s = ((result & 0x80) != 0);
+            state->cc.p = Parity((uint8_t) (result & 0xff));
+            state->cc.cy = (result > 0xff);
+            state->a = result & 0xff;
+            }
+            //Note: auxiliary carry not implemented.
+            break;
+        case 0x94:  //SUB    H
+            //Subtract Register
+            //A <- A - H
+            {
+            uint16_t result;
+            result = state->a - state->h;
+            state->cc.z = ((result & 0xff) == 0);
+            state->cc.s = ((result & 0x80) != 0);
+            state->cc.p = Parity((uint8_t) (result & 0xff));
+            state->cc.cy = (result > 0xff);
+            state->a = result & 0xff;
+            }
+            //Note: auxiliary carry not implemented.
+            break;
+        case 0x95:  //SUB    L
+            //Subtract Register
+            //A <- A - L
+            {
+            uint16_t result;
+            result = state->a - state->l;
+            state->cc.z = ((result & 0xff) == 0);
+            state->cc.s = ((result & 0x80) != 0);
+            state->cc.p = Parity((uint8_t) (result & 0xff));
+            state->cc.cy = (result > 0xff);
+            state->a = result & 0xff;
+            }
+            //Note: auxiliary carry not implemented.
+            break;
+        case 0x96:  //SUB    M
+            //Subtract memory
+            //A <- A - (HL)
+            {
+            uint16_t result;
+            uint16_t offset;
+            offset = (state->h << 8) | state->l;
+            result = state->a - state->memory[offset];
+            state->cc.z = ((result & 0xff) == 0);
+            state->cc.s = ((result & 0x80) != 0);
+            state->cc.p = Parity((uint8_t) (result & 0xff));
+            state->cc.cy = (result > 0xff);
+            state->a = result & 0xff;
+            }
+            //Note: auxiliary carry not implemented.
+            break;
+        case 0x97:  //SUB    A
+            //Subtract Register
+            //A <- A - A
+            {
+            uint16_t result;
+            result = state->a - state->a;
+            state->cc.z = ((result & 0xff) == 0);
+            state->cc.s = ((result & 0x80) != 0);
+            state->cc.p = Parity((uint8_t) (result & 0xff));
+            state->cc.cy = (result > 0xff);
+            state->a = result & 0xff;
+            }
+            //Note: auxiliary carry not implemented.
+            break;
+        case 0x98:  //SBB    B
+            //Subtract Register with borrow
+            //A <- A - B - CY
+            {
+            uint16_t result;
+            result = state->a - state->b - state->cc.cy;
+            state->cc.z = ((result & 0xff) == 0);
+            state->cc.s = ((result & 0x80) != 0);
+            state->cc.p = Parity((uint8_t) (result & 0xff));
+            state->cc.cy = (result > 0xff);
+            state->a = result & 0xff;
+            }
+            //Note: auxiliary carry not implemented.
+            break;
+        case 0x99:  //SBB    C
+            //Subtract Register with borrow
+            //A <- A - C - CY
+            {
+            uint16_t result;
+            result = state->a - state->c - state->cc.cy;
+            state->cc.z = ((result & 0xff) == 0);
+            state->cc.s = ((result & 0x80) != 0);
+            state->cc.p = Parity((uint8_t) (result & 0xff));
+            state->cc.cy = (result > 0xff);
+            state->a = result & 0xff;
+            }
+            //Note: auxiliary carry not implemented.
+            break;
+        case 0x9a:  //SBB    D
+            //Subtract Register with borrow
+            //A <- A - D - CY
+            {
+            uint16_t result;
+            result = state->a - state->d - state->cc.cy;
+            state->cc.z = ((result & 0xff) == 0);
+            state->cc.s = ((result & 0x80) != 0);
+            state->cc.p = Parity((uint8_t) (result & 0xff));
+            state->cc.cy = (result > 0xff);
+            state->a = result & 0xff;
+            }
+            //Note: auxiliary carry not implemented.
+            break;
+        case 0x9b:  //SBB    E
+            //Subtract Register with borrow
+            //A <- A - E - CY
+            {
+            uint16_t result;
+            result = state->a - state->e - state->cc.cy;
+            state->cc.z = ((result & 0xff) == 0);
+            state->cc.s = ((result & 0x80) != 0);
+            state->cc.p = Parity((uint8_t) (result & 0xff));
+            state->cc.cy = (result > 0xff);
+            state->a = result & 0xff;
+            }
+            //Note: auxiliary carry not implemented.
+            break;
+        case 0x9c:  //SBB    H
+            //Subtract Register with borrow
+            //A <- A - H - CY
+            {
+            uint16_t result;
+            result = state->a - state->h - state->cc.cy;
+            state->cc.z = ((result & 0xff) == 0);
+            state->cc.s = ((result & 0x80) != 0);
+            state->cc.p = Parity((uint8_t) (result & 0xff));
+            state->cc.cy = (result > 0xff);
+            state->a = result & 0xff;
+            }
+            //Note: auxiliary carry not implemented.
+            break;
+        case 0x9d:  //SBB    L
+            //Subtract Register with borrow
+            //A <- A - L - CY
+            {
+            uint16_t result;
+            result = state->a - state->l - state->cc.cy;
+            state->cc.z = ((result & 0xff) == 0);
+            state->cc.s = ((result & 0x80) != 0);
+            state->cc.p = Parity((uint8_t) (result & 0xff));
+            state->cc.cy = (result > 0xff);
+            state->a = result & 0xff;
+            }
+            //Note: auxiliary carry not implemented.
+            break;
+        case 0x9e:  //SBB    M
+            //Add memory with borrow
+            //A <- A - (HL) - CY
+            {
+            uint16_t result;
+            uint16_t offset;
+            offset = (state->h << 8) | state->l;
+            result = state->a + state->memory[offset] + state->cc.cy;
+            state->cc.z = ((result & 0xff) == 0);
+            state->cc.s = ((result & 0x80) != 0);
+            state->cc.p = Parity((uint8_t) (result & 0xff));
+            state->cc.cy = (result > 0xff);
+            state->a = result & 0xff;
+            }
+            //Note: auxiliary carry not implemented.
+            break;
+        case 0x9f:  //SBB    A
+            //Subtract Register with borrow
+            //A <- A - A - CY
+            {
+            uint16_t result;
+            result = state->a - state->a - state->cc.cy;
+            state->cc.z = ((result & 0xff) == 0);
+            state->cc.s = ((result & 0x80) != 0);
+            state->cc.p = Parity((uint8_t) (result & 0xff));
+            state->cc.cy = (result > 0xff);
+            state->a = result & 0xff;
+            }
+            //Note: auxiliary carry not implemented.
+            break;
+        case 0xa0:  //ANA    B
+            //AND Register
+            //A <- A & B
+            {
+            uint16_t result;
+            result = state->a & state->b;
+            state->cc.z = ((result & 0xff) == 0);
+            state->cc.s = ((result & 0x80) != 0);
+            state->cc.p = Parity((uint8_t) (result & 0xff));
+            state->cc.cy = 0x0;
+            state->a = result & 0xff;
+            }
+            //Note: auxiliary carry not implemented.
+            break;
+        case 0xa1:  //ANA    C
+            //AND Register
+            //A <- A & C
+            {
+            uint16_t result;
+            result = state->a & state->c;
+            state->cc.z = ((result & 0xff) == 0);
+            state->cc.s = ((result & 0x80) != 0);
+            state->cc.p = Parity((uint8_t) (result & 0xff));
+            state->cc.cy = 0x0;
+            state->a = result & 0xff;
+            }
+            //Note: auxiliary carry not implemented.
+            break;
+        case 0xa2:  //ANA    D
+            //AND Register
+            //A <- A & D
+            {
+            uint16_t result;
+            result = state->a & state->d;
+            state->cc.z = ((result & 0xff) == 0);
+            state->cc.s = ((result & 0x80) != 0);
+            state->cc.p = Parity((uint8_t) (result & 0xff));
+            state->cc.cy = 0x0;
+            state->a = result & 0xff;
+            }
+            //Note: auxiliary carry not implemented.
+            break;
+        case 0xa3:  //ANA    E
+            //AND Register
+            //A <- A & E
+            {
+            uint16_t result;
+            result = state->a & state->e;
+            state->cc.z = ((result & 0xff) == 0);
+            state->cc.s = ((result & 0x80) != 0);
+            state->cc.p = Parity((uint8_t) (result & 0xff));
+            state->cc.cy = 0x0;
+            state->a = result & 0xff;
+            }
+            //Note: auxiliary carry not implemented.
+            break;
+        case 0xa4:  //ANA    H
+            //AND Register
+            //A <- A & H
+            {
+            uint16_t result;
+            result = state->a & state->h;
+            state->cc.z = ((result & 0xff) == 0);
+            state->cc.s = ((result & 0x80) != 0);
+            state->cc.p = Parity((uint8_t) (result & 0xff));
+            state->cc.cy = 0x0;
+            state->a = result & 0xff;
+            }
+            //Note: auxiliary carry not implemented.
+            break;
+        case 0xa5:  //ANA    L
+            //AND Register
+            //A <- A & L
+            {
+            uint16_t result;
+            result = state->a & state->l;
+            state->cc.z = ((result & 0xff) == 0);
+            state->cc.s = ((result & 0x80) != 0);
+            state->cc.p = Parity((uint8_t) (result & 0xff));
+            state->cc.cy = 0x0;
+            state->a = result & 0xff;
+            }
+            //Note: auxiliary carry not implemented.
+            break;
+        case 0xa6:  //ANA    M
+            //AND memory
+            //A <- A & (HL)
+            {
+            uint16_t offset;
+            uint16_t result;
+            offset = (state->h << 8) | state->l;
+            result = state->a & state->memory[offset];
+            state->cc.z = ((result & 0xff) == 0);
+            state->cc.s = ((result & 0x80) != 0);
+            state->cc.p = Parity((uint8_t) (result & 0xff));
+            state->cc.cy = 0x0;
+            state->a = result & 0xff;
+            }
+            //Note: auxiliary carry not implemented.
+            break;
+        case 0xa7:  //ANA    A
+            //AND Register
+            //A <- A & A
+            {
+            uint16_t result;
+            result = state->a & state->a;
+            state->cc.z = ((result & 0xff) == 0);
+            state->cc.s = ((result & 0x80) != 0);
+            state->cc.p = Parity((uint8_t) (result & 0xff));
+            state->cc.cy = 0x0;
+            state->a = result & 0xff;
+            }
+            //Note: auxiliary carry not implemented.
+            break;
+        case 0xa8:  //XRA    B
+            //Exclusive OR Register
+            //A <- A ^ B
+            {
+            uint16_t result;
+            result = state->a ^ state->b;
+            state->cc.z = ((result & 0xff) == 0);
+            state->cc.s = ((result & 0x80) != 0);
+            state->cc.p = Parity((uint8_t) (result & 0xff));
+            state->cc.cy = 0x0;
+            state->cc.ac = 0x0;
+            state->a = result & 0xff;
+            }
+            break;
+        case 0xa9:  //XRA    C
+            //Exclusive OR Register
+            //A <- A ^ C
+            {
+            uint16_t result;
+            result = state->a ^ state->c;
+            state->cc.z = ((result & 0xff) == 0);
+            state->cc.s = ((result & 0x80) != 0);
+            state->cc.p = Parity((uint8_t) (result & 0xff));
+            state->cc.cy = 0x0;
+            state->cc.ac = 0x0;
+            state->a = result & 0xff;
+            }
+            break;
+        case 0xaa:  //XRA    D
+            //Exclusive OR Register
+            //A <- A ^ D
+            {
+            uint16_t result;
+            result = state->a ^ state->d;
+            state->cc.z = ((result & 0xff) == 0);
+            state->cc.s = ((result & 0x80) != 0);
+            state->cc.p = Parity((uint8_t) (result & 0xff));
+            state->cc.cy = 0x0;
+            state->cc.ac = 0x0;
+            state->a = result & 0xff;
+            }
+            break;
+        case 0xab:  //XRA    E
+            //Exclusive OR Register
+            //A <- A ^ E
+            {
+            uint16_t result;
+            result = state->a ^ state->e;
+            state->cc.z = ((result & 0xff) == 0);
+            state->cc.s = ((result & 0x80) != 0);
+            state->cc.p = Parity((uint8_t) (result & 0xff));
+            state->cc.cy = 0x0;
+            state->cc.ac = 0x0;
+            state->a = result & 0xff;
+            }
+            break;
+        case 0xac:  //XRA    H
+            //Exclusive OR Register
+            //A <- A ^ H
+            {
+            uint16_t result;
+            result = state->a ^ state->h;
+            state->cc.z = ((result & 0xff) == 0);
+            state->cc.s = ((result & 0x80) != 0);
+            state->cc.p = Parity((uint8_t) (result & 0xff));
+            state->cc.cy = 0x0;
+            state->cc.ac = 0x0;
+            state->a = result & 0xff;
+            }
+            break;
+        case 0xad:  //XRA    L
+            //Exclusive OR Register
+            //A <- A ^ L
+            {
+            uint16_t result;
+            result = state->a ^ state->l;
+            state->cc.z = ((result & 0xff) == 0);
+            state->cc.s = ((result & 0x80) != 0);
+            state->cc.p = Parity((uint8_t) (result & 0xff));
+            state->cc.cy = 0x0;
+            state->cc.ac = 0x0;
+            state->a = result & 0xff;
+            }
+            break;
+        case 0xae:  //XRA    M
+            //Exclusive OR Memory
+            //A <- A ^ (HL)
+            {
+            uint16_t offset;
+            uint16_t result;
+            offset = (state->h << 8) | state->l;
+            result = state->a ^ state->memory[offset];
+            state->cc.z = ((result & 0xff) == 0);
+            state->cc.s = ((result & 0x80) != 0);
+            state->cc.p = Parity((uint8_t) (result & 0xff));
+            state->cc.cy = 0x0;
+            state->cc.ac = 0x0;
+            state->a = result & 0xff;
+            }
+            break;
+        case 0xaf:  //XRA    A
+            //Exclusive OR Register
+            //A <- A ^ A
+            {
+            uint16_t result;
+            result = state->a ^ state->a;
+            state->cc.z = ((result & 0xff) == 0);
+            state->cc.s = ((result & 0x80) != 0);
+            state->cc.p = Parity((uint8_t) (result & 0xff));
+            state->cc.cy = 0x0;
+            state->cc.ac = 0x0;
+            state->a = result & 0xff;
+            }
+            break;
+        case 0xb0:  //ORA    B
+            //OR Register
+            //A <- A | B
+            {
+            uint16_t result;
+            result = state->a | state->b;
+            state->cc.z = ((result & 0xff) == 0);
+            state->cc.s = ((result & 0x80) != 0);
+            state->cc.p = Parity((uint8_t) (result & 0xff));
+            state->cc.cy = 0x0;
+            state->cc.ac = 0x0;
+            state->a = result & 0xff;
+            }
+            break;
+        case 0xb1:  //ORA    C
+            //OR Register
+            //A <- A | C
+            {
+            uint16_t result;
+            result = state->a | state->c;
+            state->cc.z = ((result & 0xff) == 0);
+            state->cc.s = ((result & 0x80) != 0);
+            state->cc.p = Parity((uint8_t) (result & 0xff));
+            state->cc.cy = 0x0;
+            state->cc.ac = 0x0;
+            state->a = result & 0xff;
+            }
+            break;
+        case 0xb2:  //ORA    D
+            //OR Register
+            //A <- A | D
+            {
+            uint16_t result;
+            result = state->a | state->d;
+            state->cc.z = ((result & 0xff) == 0);
+            state->cc.s = ((result & 0x80) != 0);
+            state->cc.p = Parity((uint8_t) (result & 0xff));
+            state->cc.cy = 0x0;
+            state->cc.ac = 0x0;
+            state->a = result & 0xff;
+            }
+            break;
+        case 0xb3:  //ORA    E
+            //OR Register
+            //A <- A | E
+            {
+            uint16_t result;
+            result = state->a | state->e;
+            state->cc.z = ((result & 0xff) == 0);
+            state->cc.s = ((result & 0x80) != 0);
+            state->cc.p = Parity((uint8_t) (result & 0xff));
+            state->cc.cy = 0x0;
+            state->cc.ac = 0x0;
+            state->a = result & 0xff;
+            }
+            break;
+        case 0xb4:  //ORA    H
+            //OR Register
+            //A <- A | H
+            {
+            uint16_t result;
+            result = state->a | state->h;
+            state->cc.z = ((result & 0xff) == 0);
+            state->cc.s = ((result & 0x80) != 0);
+            state->cc.p = Parity((uint8_t) (result & 0xff));
+            state->cc.cy = 0x0;
+            state->cc.ac = 0x0;
+            state->a = result & 0xff;
+            }
+            break;
+        case 0xb5:  //ORA    L
+            //OR Register
+            //A <- A | L
+            {
+            uint16_t result;
+            result = state->a | state->l;
+            state->cc.z = ((result & 0xff) == 0);
+            state->cc.s = ((result & 0x80) != 0);
+            state->cc.p = Parity((uint8_t) (result & 0xff));
+            state->cc.cy = 0x0;
+            state->cc.ac = 0x0;
+            state->a = result & 0xff;
+            }
+            break;
+        case 0xb6:  //ORA    M
+            //OR Memory
+            //A <- A | (HL)
+            {
+            uint16_t offset;
+            uint16_t result;
+            offset = (state->h << 8) | state->l;
+            result = state->a | state->memory[offset];
+            state->cc.z = ((result & 0xff) == 0);
+            state->cc.s = ((result & 0x80) != 0);
+            state->cc.p = Parity((uint8_t) (result & 0xff));
+            state->cc.cy = 0x0;
+            state->cc.ac = 0x0;
+            state->a = result & 0xff;
+            }
+            break;
+        case 0xb7:  //ORA    A
+            //OR Register
+            //A <- A | A
+            {
+            uint16_t result;
+            result = state->a | state->a;
+            state->cc.z = ((result & 0xff) == 0);
+            state->cc.s = ((result & 0x80) != 0);
+            state->cc.p = Parity((uint8_t) (result & 0xff));
+            state->cc.cy = 0x0;
+            state->cc.ac = 0x0;
+            state->a = result & 0xff;
+            }
+            break;
+        case 0xb8:  //CMP    B
+            //Compare Register
+            //A - B
+            {
+            uint16_t result;
+            result = state->a - state->b;
+            state->cc.z = ((result & 0xff) == 0);
+            state->cc.s = ((result & 0x80) != 0);
+            state->cc.p = Parity((uint8_t) (result & 0xff));
+            state->cc.cy = (result > 0xff); //If (A - B) > 0xff, then a was less than b (since it loops around, starting at 0xFFFF and going down). Neither A nor B can be larger than 0xff. Same logic as in other commands higher up in this file.
+            }
+            //Note: auxiliary carry not implemented.
+            break;
+        case 0xb9:  //CMP    C
+            //Compare Register
+            //A - C
+            {
+            uint16_t result;
+            result = state->a - state->c;
+            state->cc.z = ((result & 0xff) == 0);
+            state->cc.s = ((result & 0x80) != 0);
+            state->cc.p = Parity((uint8_t) (result & 0xff));
+            state->cc.cy = (result > 0xff);
+            }
+            //Note: auxiliary carry not implemented.
+            break;
+        case 0xba:  //CMP    D
+            //Compare Register
+            //A - D
+            {
+            uint16_t result;
+            result = state->a - state->d;
+            state->cc.z = ((result & 0xff) == 0);
+            state->cc.s = ((result & 0x80) != 0);
+            state->cc.p = Parity((uint8_t) (result & 0xff));
+            state->cc.cy = (result > 0xff);
+            }
+            //Note: auxiliary carry not implemented.
+            break;
+        case 0xbb:  //CMP    E
+            //Compare Register
+            //A - E
+            {
+            uint16_t result;
+            result = state->a - state->e;
+            state->cc.z = ((result & 0xff) == 0);
+            state->cc.s = ((result & 0x80) != 0);
+            state->cc.p = Parity((uint8_t) (result & 0xff));
+            state->cc.cy = (result > 0xff);
+            }
+            //Note: auxiliary carry not implemented.
+            break;
+        case 0xbc:  //CMP    H
+            //Compare Register
+            //A - H
+            {
+            uint16_t result;
+            result = state->a - state->h;
+            state->cc.z = ((result & 0xff) == 0);
+            state->cc.s = ((result & 0x80) != 0);
+            state->cc.p = Parity((uint8_t) (result & 0xff));
+            state->cc.cy = (result > 0xff);
+            }
+            //Note: auxiliary carry not implemented.
+            break;
+        case 0xbd:  //CMP    L
+            //Compare Register
+            //A - L
+            {
+            uint16_t result;
+            result = state->a - state->l;
+            state->cc.z = ((result & 0xff) == 0);
+            state->cc.s = ((result & 0x80) != 0);
+            state->cc.p = Parity((uint8_t) (result & 0xff));
+            state->cc.cy = (result > 0xff);
+            }
+            //Note: auxiliary carry not implemented.
+            break;
+        case 0xbe:  //CMP    M
+            //Compare Memory
+            //A - (HL)
+            {
+            uint16_t offset;
+            uint16_t result;
+            offset = (state->h << 8) | state->l;
+            result = state->a - state->memory[offset];
+            state->cc.z = ((result & 0xff) == 0);
+            state->cc.s = ((result & 0x80) != 0);
+            state->cc.p = Parity((uint8_t) (result & 0xff));
+            state->cc.cy = (result > 0xff);
+            }
+            //Note: auxiliary carry not implemented.
+            break;
+        case 0xbf:  //CMP    A
+            //Compare Register
+            //A - A
+            {
+            uint16_t result;
+            result = state->a - state->a;
+            state->cc.z = ((result & 0xff) == 0);
+            state->cc.s = ((result & 0x80) != 0);
+            state->cc.p = Parity((uint8_t) (result & 0xff));
+            state->cc.cy = (result > 0xff);
+            }
+            //Note: auxiliary carry not implemented.
+            break;
         case 0xc0: UnimplementedInstruction(state); break;
         case 0xc1: UnimplementedInstruction(state); break;
         case 0xc2: UnimplementedInstruction(state); break;
@@ -1216,7 +2044,7 @@ int LoadFile(uint8_t *state){
     unsigned char *buffer;
 
     //Open file in read binary mode. "r" by itself would be read text, which stops 0x1B from being read (it gets read as an EOF if the file is opened in text mode).
-    invaders = fopen("InvadersFull.h", "rb");
+    invaders = fopen("Place Game ROM Here\\InvadersFull.h", "rb");
     if (invaders == NULL){ printf("Error: File not found!");}
 
     //Load the entire file into memory. Start by finding the end of the file.
