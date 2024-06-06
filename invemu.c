@@ -2047,7 +2047,10 @@ void Emulate8080Op(State8080* state){
             Pop(state, &state->d, &state->e);
             break;
         case 0xd2: UnimplementedInstruction(state); break;
-        case 0xd3: UnimplementedInstruction(state); break;
+        case 0xd3:  //OUT    D8
+            //Output
+            state->pc++;
+            break;
         case 0xd4: UnimplementedInstruction(state); break;
         case 0xd5:  //PUSH    D
             //Push to stack
@@ -2092,7 +2095,10 @@ void Emulate8080Op(State8080* state){
             state->sp += 2;
             break;
         case 0xda: UnimplementedInstruction(state); break;
-        case 0xdb: UnimplementedInstruction(state); break;
+        case 0xdb:  //IN     D8
+            //Input
+            state->pc++;
+            break;
         case 0xdc: UnimplementedInstruction(state); break;
         case 0xdd: UnimplementedInstruction(state); break;
         case 0xde:  //SBI    D8
@@ -2127,7 +2133,20 @@ void Emulate8080Op(State8080* state){
             Pop(state, &state->d, &state->e);
             break;
         case 0xe2: UnimplementedInstruction(state); break;
-        case 0xe3: UnimplementedInstruction(state); break;
+        case 0xe3:  //XTHL
+            //Exchange stack top with H and L
+            //(L) <-> ((SP))
+            //(H) <-> ((SP) + 1)
+            {
+            uint8_t temp;
+            temp = state->l;
+            state->l = state->memory[state->sp];
+            state->memory[state->sp] = temp;
+            temp = state->h;
+            state->h = state->memory[state->sp + 1];
+            state->memory[state->sp + 1] = temp;
+            }
+            break;
         case 0xe4: UnimplementedInstruction(state); break;
         case 0xe5:  //PUSH    H
             //Push to stack
@@ -2162,7 +2181,20 @@ void Emulate8080Op(State8080* state){
             break;
         case 0xe9: UnimplementedInstruction(state); break;
         case 0xea: UnimplementedInstruction(state); break;
-        case 0xeb: UnimplementedInstruction(state); break;
+        case 0xeb:  //XCHG
+            //Exchange H and L with D and E
+            // (H) <-> (D)
+            // (L) <-> (E)
+            {
+            uint8_t temp;
+            temp = state->h;
+            state->h = state->d;
+            state->d = temp;
+            temp = state->l;
+            state->l = state->e;
+            state->e = temp;
+            }
+            break;
         case 0xec: UnimplementedInstruction(state); break;
         case 0xed: UnimplementedInstruction(state); break;
         case 0xee:  //XRI    D8
@@ -2207,7 +2239,9 @@ void Emulate8080Op(State8080* state){
             state->sp += 2;
             break;
         case 0xf2: UnimplementedInstruction(state); break;
-        case 0xf3: UnimplementedInstruction(state); break;
+        case 0xf3:  //DI
+            //Disable interrupts
+            state->int_enable = 0; break;
         case 0xf4: UnimplementedInstruction(state); break;
         case 0xf5:  //PUSH   PSW
             //Push processor status word
@@ -2256,9 +2290,16 @@ void Emulate8080Op(State8080* state){
                 state->sp += 2;
             }
             break;
-        case 0xf9: UnimplementedInstruction(state); break;
+        case 0xf9:  //SPHL
+            //Move HL to SP
+            //(SP) <- (H) (L)
+            state->sp = state->h << 8;
+            state->sp = state->sp | state->l;
+            break;
         case 0xfa: UnimplementedInstruction(state); break;
-        case 0xfb: UnimplementedInstruction(state); break;
+        case 0xfb:  //EI
+            //Enable interrupts
+            state->int_enable = 1; break;
         case 0xfc: UnimplementedInstruction(state); break;
         case 0xfd: UnimplementedInstruction(state); break;
         case 0xfe:  //CPI    D8
