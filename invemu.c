@@ -32,6 +32,7 @@ typedef struct State8080 {
 int LoadFile(uint8_t *);
 void UnimplementedInstruction(State8080*);
 void Emulate8080Op(State8080*);
+void Pop(State8080*, uint8_t *, uint8_t *);
 int Parity(uint8_t);
 
 int main(){
@@ -1949,6 +1950,7 @@ void Emulate8080Op(State8080* state){
             //Note: auxiliary carry not implemented.
             break;
         case 0xc0:  //RNZ
+            //Conditional Return
             //If NZ (If the zero flag is zero, i.e if the result of the previous operation was not zero), do the following (operation is identical to RET):
             //(PCL) <- ((SP))
             //(PCH) <- ((SP) + 1)
@@ -1959,7 +1961,13 @@ void Emulate8080Op(State8080* state){
                 state->sp += 2;
             }
             break;
-        case 0xc1: UnimplementedInstruction(state); break;
+        case 0xc1:  //POP    B
+            //Pop stack
+            //(C) <- ((SP))
+            //(B) <- ((SP) + 1)
+            //(SP) <- (SP) + 2
+            Pop(state, &state->b, &state->c);
+            break;
         case 0xc2: UnimplementedInstruction(state); break;
         case 0xc3: UnimplementedInstruction(state); break;
         case 0xc4: UnimplementedInstruction(state); break;
@@ -1981,6 +1989,7 @@ void Emulate8080Op(State8080* state){
             break;
         case 0xc7: UnimplementedInstruction(state); break;
         case 0xc8:  //RZ
+            //Conditional Return
             //If Z, RET:
             if (state->cc.z == 1){
                 state->pc = (state->memory[state->sp + 1] << 8) | state->memory[state->sp];
@@ -1988,6 +1997,7 @@ void Emulate8080Op(State8080* state){
             }
             break;
         case 0xc9:  //RET
+            //Return
             //(PCL) <- ((SP))
             //(PCH) <- ((SP) + 1)
             //(SP) <- (SP) + 2
@@ -2015,13 +2025,20 @@ void Emulate8080Op(State8080* state){
             break;
         case 0xcf: UnimplementedInstruction(state); break;
         case 0xd0:  //RNC
+            //Conditional Return
             //If NCY, RET:
             if (state->cc.cy == 0){
                 state->pc = (state->memory[state->sp + 1] << 8) | state->memory[state->sp];
                 state->sp += 2;
             }
             break;
-        case 0xd1: UnimplementedInstruction(state); break;
+        case 0xd1:  //POP    D
+            //Pop stack
+            //(E) <- ((SP))
+            //(D) <- ((SP) + 1)
+            //(SP) <- (SP) + 2
+            Pop(state, &state->d, &state->e);
+            break;
         case 0xd2: UnimplementedInstruction(state); break;
         case 0xd3: UnimplementedInstruction(state); break;
         case 0xd4: UnimplementedInstruction(state); break;
@@ -2043,6 +2060,7 @@ void Emulate8080Op(State8080* state){
             break;
         case 0xd7: UnimplementedInstruction(state); break;
         case 0xd8:  //RC
+            //Conditional Return
             //If CY, RET:
             //(PCL) <- ((SP))
             //(PCH) <- ((SP) + 1)
@@ -2052,7 +2070,14 @@ void Emulate8080Op(State8080* state){
                 state->sp += 2;
             }
             break;
-        case 0xd9: UnimplementedInstruction(state); break;
+        case 0xd9:  //RET
+            //Return
+            //(PCL) <- ((SP))
+            //(PCH) <- ((SP) + 1)
+            //(SP) <- (SP) + 2
+            state->pc = (state->memory[state->sp + 1] << 8) | state->memory[state->sp];
+            state->sp += 2;
+            break;
         case 0xda: UnimplementedInstruction(state); break;
         case 0xdb: UnimplementedInstruction(state); break;
         case 0xdc: UnimplementedInstruction(state); break;
@@ -2074,13 +2099,20 @@ void Emulate8080Op(State8080* state){
             break;
         case 0xdf: UnimplementedInstruction(state); break;
         case 0xe0:  //RPO
+            //Conditional Return
             //If Parity is odd, RET:
             if (state->cc.p == 0){
                 state->pc = (state->memory[state->sp + 1] << 8) | state->memory[state->sp];
                 state->sp += 2;
             }
             break;
-        case 0xe1: UnimplementedInstruction(state); break;
+        case 0xe1:  //POP    H
+            //Pop stack
+            //(L) <- ((SP))
+            //(H) <- ((SP) + 1)
+            //(SP) <- (SP) + 2
+            Pop(state, &state->d, &state->e);
+            break;
         case 0xe2: UnimplementedInstruction(state); break;
         case 0xe3: UnimplementedInstruction(state); break;
         case 0xe4: UnimplementedInstruction(state); break;
@@ -2094,14 +2126,15 @@ void Emulate8080Op(State8080* state){
             state->cc.z = ((result & 0xff) == 0);
             state->cc.s = ((result & 0x80) != 0);
             state->cc.p = Parity((uint8_t) (result & 0xff));
-            state->cc.cy = (result > 0xff);
+            state->cc.cy = 0;
+            state->cc.ac = 0;
             state->a = result & 0xff;
             state->pc += 1;
             }
-            //Note: auxiliary carry not implemented.
             break;
         case 0xe7: UnimplementedInstruction(state); break;
         case 0xe8:  //RPE
+            //Conditional Return
             //If Parity is even, RET:
             if (state->cc.p == 1){
                 state->pc = (state->memory[state->sp + 1] << 8) | state->memory[state->sp];
@@ -2130,13 +2163,30 @@ void Emulate8080Op(State8080* state){
             break;
         case 0xef: UnimplementedInstruction(state); break;
         case 0xf0:  //RP
+            //Conditional Return
             //If sign flag is 0 (i.e result was a positive integer), RET:
             if (state->cc.s == 0){
                 state->pc = (state->memory[state->sp + 1] << 8) | state->memory[state->sp];
                 state->sp += 2;
             }
             break;
-        case 0xf1: UnimplementedInstruction(state); break;
+        case 0xf1:  //POP    PSW
+            //Pop processor status word
+            //(CY) <- ((SP))0 //bit 0 (rightmost bit) of the byte contained at the address in the stack pointer.
+            //(P) <- ((SP))2 //bit 2, etc.
+            //(AC) <- ((SP))4
+            //(Z) <- ((SP))6
+            //(S) <- ((SP))7
+            //(A) <- ((SP) + 1)
+            //(SP) <- (SP) + 2
+            state->cc.cy = state->memory[state->sp] & 0x1;
+            state->cc.p = (state->memory[state->sp] >> 2) & 0x1;
+            state->cc.ac = (state->memory[state->sp] >> 4) & 0x1;
+            state->cc.z = (state->memory[state->sp] >> 6) & 0x1;
+            state->cc.s = (state->memory[state->sp] >> 7) & 0x1;
+            state->a = state->memory[state->sp + 1];
+            state->sp += 2;
+            break;
         case 0xf2: UnimplementedInstruction(state); break;
         case 0xf3: UnimplementedInstruction(state); break;
         case 0xf4: UnimplementedInstruction(state); break;
@@ -2150,14 +2200,15 @@ void Emulate8080Op(State8080* state){
             state->cc.z = ((result & 0xff) == 0);
             state->cc.s = ((result & 0x80) != 0);
             state->cc.p = Parity((uint8_t) (result & 0xff));
-            state->cc.cy = (result > 0xff);
+            state->cc.cy = 0;
+            state->cc.ac = 0;
             state->a = result & 0xff;
             state->pc += 1;
             }
-            //Note: auxiliary carry not implemented.
             break;
         case 0xf7: UnimplementedInstruction(state); break;
         case 0xf8:  //RM
+            //Conditional Return
             //If sign flag is 1 (i.e result was a negative integer), RET:
             if (state->cc.s == 0){
                 state->pc = (state->memory[state->sp + 1] << 8) | state->memory[state->sp];
@@ -2190,6 +2241,12 @@ void Emulate8080Op(State8080* state){
     }
     printf("\n");
     state->pc+=1;
+}
+
+void Pop(State8080* state, uint8_t *high, uint8_t *low){
+            *low = state->memory[state->sp];
+            *high = state->memory[state->sp + 1];
+            state->sp += 2;
 }
 
 int Parity(uint8_t result){
