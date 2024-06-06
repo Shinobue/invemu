@@ -33,6 +33,7 @@ int LoadFile(uint8_t *);
 void UnimplementedInstruction(State8080*);
 void Emulate8080Op(State8080*);
 void Pop(State8080*, uint8_t *, uint8_t *);
+void Push(State8080*, uint8_t *, uint8_t *);
 int Parity(uint8_t);
 
 int main(){
@@ -1971,7 +1972,13 @@ void Emulate8080Op(State8080* state){
         case 0xc2: UnimplementedInstruction(state); break;
         case 0xc3: UnimplementedInstruction(state); break;
         case 0xc4: UnimplementedInstruction(state); break;
-        case 0xc5: UnimplementedInstruction(state); break;
+        case 0xc5:  //PUSH    B
+            //Push to stack
+            //(B) <- ((SP) - 1)
+            //(C) <- ((SP) - 2)
+            //(SP) <- (SP) - 2
+            Push(state, &state->b, &state->c);
+            break;
         case 0xc6:  //ADI    D8
             //Add Immediate
             //A <- A + byte 2
@@ -2042,7 +2049,13 @@ void Emulate8080Op(State8080* state){
         case 0xd2: UnimplementedInstruction(state); break;
         case 0xd3: UnimplementedInstruction(state); break;
         case 0xd4: UnimplementedInstruction(state); break;
-        case 0xd5: UnimplementedInstruction(state); break;
+        case 0xd5:  //PUSH    D
+            //Push to stack
+            //(D) <- ((SP) - 1)
+            //(E) <- ((SP) - 2)
+            //(SP) <- (SP) - 2
+            Push(state, &state->d, &state->e);
+            break;
         case 0xd6:  //SUI    D8
             //Subtract Immediate
             //A <- A - byte 2
@@ -2116,7 +2129,13 @@ void Emulate8080Op(State8080* state){
         case 0xe2: UnimplementedInstruction(state); break;
         case 0xe3: UnimplementedInstruction(state); break;
         case 0xe4: UnimplementedInstruction(state); break;
-        case 0xe5: UnimplementedInstruction(state); break;
+        case 0xe5:  //PUSH    H
+            //Push to stack
+            //(H) <- ((SP) - 1)
+            //(L) <- ((SP) - 2)
+            //(SP) <- (SP) - 2
+            Push(state, &state->h, &state->l);
+            break;
         case 0xe6:  //ANI    D8
             //AND Immediate
             //A <- A & byte 2
@@ -2190,7 +2209,29 @@ void Emulate8080Op(State8080* state){
         case 0xf2: UnimplementedInstruction(state); break;
         case 0xf3: UnimplementedInstruction(state); break;
         case 0xf4: UnimplementedInstruction(state); break;
-        case 0xf5: UnimplementedInstruction(state); break;
+        case 0xf5:  //PUSH   PSW
+            //Push processor status word
+            //((SP) - 1) <- (A)
+            //((SP) - 2)0 <- (CY)
+            //((SP) - 2)1 <- 1
+            //((SP) - 2)2 <- (P)
+            //((SP) - 2)3 <- 0
+            //((SP) - 2)4 <- (AC)
+            //((SP) - 2)5 <- 0
+            //((SP) - 2)6 <- (Z)
+            //((SP) - 2)7 <- (S)
+            //(SP) <- (SP) - 2
+            state->memory[state->sp - 1] = state->a;
+            state->memory[state->sp - 2] = state->cc.s & 0x01;
+            state->memory[state->sp - 2] = (state->memory[state->sp - 2] << 1) | state->cc.z;
+            state->memory[state->sp - 2] = (state->memory[state->sp - 2] << 1) | 0x0;
+            state->memory[state->sp - 2] = (state->memory[state->sp - 2] << 1) | state->cc.ac;
+            state->memory[state->sp - 2] = (state->memory[state->sp - 2] << 1) | 0x0;
+            state->memory[state->sp - 2] = (state->memory[state->sp - 2] << 1) | state->cc.p;
+            state->memory[state->sp - 2] = (state->memory[state->sp - 2] << 1) | 0x01;
+            state->memory[state->sp - 2] = (state->memory[state->sp - 2] << 1) | state->cc.cy;
+            state->sp -= 2;
+            break;
         case 0xf6:  //ORI    D8
             //OR Immediate
             //A <- A | byte 2
@@ -2247,6 +2288,12 @@ void Pop(State8080* state, uint8_t *high, uint8_t *low){
             *low = state->memory[state->sp];
             *high = state->memory[state->sp + 1];
             state->sp += 2;
+}
+
+void Push(State8080* state, uint8_t *high, uint8_t *low){
+    state->memory[state->sp - 1] = *high;
+    state->memory[state->sp - 2] = *low;
+    state->sp -= 2;
 }
 
 int Parity(uint8_t result){
