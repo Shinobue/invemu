@@ -29,9 +29,12 @@ typedef struct State8080 {
     uint8_t     int_enable;   
 } State8080;
 
+//Function declarations.
 int LoadFile(uint8_t *);
 void UnimplementedInstruction(State8080*);
 void Emulate8080Op(State8080*);
+void Jump(State8080*, unsigned char *);
+void Call(State8080*, unsigned char *);
 void Pop(State8080*, uint8_t *, uint8_t *);
 void Push(State8080*, uint8_t *, uint8_t *);
 int Parity(uint8_t);
@@ -1969,9 +1972,29 @@ void Emulate8080Op(State8080* state){
             //(SP) <- (SP) + 2
             Pop(state, &state->b, &state->c);
             break;
-        case 0xc2: UnimplementedInstruction(state); break;
-        case 0xc3: UnimplementedInstruction(state); break;
-        case 0xc4: UnimplementedInstruction(state); break;
+        case 0xc2:  //JNZ    D16
+            //Conditional jump (not zero)
+            if (state->cc.z == 0){
+                Jump(state, opcode);
+            }
+            else{
+                state->pc += 2;
+            }
+            break;
+        case 0xc3:  //JMP    D16
+            //Jump
+            //(PC) <- (byte 3) (byte 2)
+            Jump(state, opcode);
+            break;
+        case 0xc4:  //CNZ    D16
+            //Condition call (not zero)
+            if (state->cc.z == 0){
+                Call(state, opcode);
+            }
+            else{
+                state->pc += 2;
+            }
+            break;
         case 0xc5:  //PUSH    B
             //Push to stack
             //(B) <- ((SP) - 1)
@@ -2011,10 +2034,37 @@ void Emulate8080Op(State8080* state){
             state->pc = (state->memory[state->sp + 1] << 8) | state->memory[state->sp];
             state->sp += 2;
             break;
-        case 0xca: UnimplementedInstruction(state); break;
-        case 0xcb: UnimplementedInstruction(state); break;
-        case 0xcc: UnimplementedInstruction(state); break;
-        case 0xcd: UnimplementedInstruction(state); break;
+        case 0xca:  //JZ    D16
+            //Conditional jump (zero)
+            if (state->cc.z == 1){
+                Jump(state, opcode);
+            }
+            else{
+                state->pc += 2;
+            }
+            break;
+        case 0xcb:  //JMP    D16
+            //Jump
+            //(PC) <- (byte 3) (byte 2)
+            Jump(state, opcode);
+            break;
+        case 0xcc:  //CZ     D16
+            //Condition call (zero)
+            if (state->cc.z == 1){
+                Call(state, opcode);
+            }
+            else{
+                state->pc += 2;
+            }
+            break;
+        case 0xcd:  //CALL   D16
+            //Call
+            //((SP) - 1) <- (PCH)
+            //((SP) - 2) <- (PCL)
+            //(SP) <- (SP) - 2
+            //(PC) <- (byte 3) (byte 2)
+            Call(state, opcode);
+            break;
         case 0xce:  //ACI    D8
             //Add Immediate with carry
             //A <- A + byte 2 + CY
@@ -2046,12 +2096,28 @@ void Emulate8080Op(State8080* state){
             //(SP) <- (SP) + 2
             Pop(state, &state->d, &state->e);
             break;
-        case 0xd2: UnimplementedInstruction(state); break;
+        case 0xd2:  //JNC    D16
+            //Conditional jump (no carry)
+            if (state->cc.cy == 0){
+                Jump(state, opcode);
+            }
+            else{
+                state->pc += 2;
+            }
+            break;
         case 0xd3:  //OUT    D8
             //Output
             state->pc++;
             break;
-        case 0xd4: UnimplementedInstruction(state); break;
+        case 0xd4:  //CNC    D16
+            //Condition call (no carry)
+            if (state->cc.cy == 0){
+                Call(state, opcode);
+            }
+            else{
+                state->pc += 2;
+            }
+            break;
         case 0xd5:  //PUSH    D
             //Push to stack
             //(D) <- ((SP) - 1)
@@ -2094,13 +2160,36 @@ void Emulate8080Op(State8080* state){
             state->pc = (state->memory[state->sp + 1] << 8) | state->memory[state->sp];
             state->sp += 2;
             break;
-        case 0xda: UnimplementedInstruction(state); break;
+        case 0xda:  //JC    D16
+            //Conditional jump (carry)
+            if (state->cc.cy == 1){
+                Jump(state, opcode);
+            }
+            else{
+                state->pc += 2;
+            }
+            break;
         case 0xdb:  //IN     D8
             //Input
             state->pc++;
             break;
-        case 0xdc: UnimplementedInstruction(state); break;
-        case 0xdd: UnimplementedInstruction(state); break;
+        case 0xdc:  //CC     D16
+            //Condition call (carry)
+            if (state->cc.cy == 1){
+                Call(state, opcode);
+            }
+            else{
+                state->pc += 2;
+            }
+            break;
+        case 0xdd:  //CALL   D16
+            //Call
+            //((SP) - 1) <- (PCH)
+            //((SP) - 2) <- (PCL)
+            //(SP) <- (SP) - 2
+            //(PC) <- (byte 3) (byte 2)
+            Call(state, opcode);
+            break;
         case 0xde:  //SBI    D8
             //Subtract Immediate with borrow
             //A <- A - byte 2 - CY
@@ -2132,7 +2221,15 @@ void Emulate8080Op(State8080* state){
             //(SP) <- (SP) + 2
             Pop(state, &state->d, &state->e);
             break;
-        case 0xe2: UnimplementedInstruction(state); break;
+        case 0xe2:  //JPO    D16
+            //Conditional jump (odd parity)
+            if (state->cc.p == 0){
+                Jump(state, opcode);
+            }
+            else{
+                state->pc += 2;
+            }
+            break;
         case 0xe3:  //XTHL
             //Exchange stack top with H and L
             //(L) <-> ((SP))
@@ -2147,7 +2244,15 @@ void Emulate8080Op(State8080* state){
             state->memory[state->sp + 1] = temp;
             }
             break;
-        case 0xe4: UnimplementedInstruction(state); break;
+        case 0xe4:  //CPO    D16
+            //Condition call (odd parity)
+            if (state->cc.p == 0){
+                Call(state, opcode);
+            }
+            else{
+                state->pc += 2;
+            }
+            break;
         case 0xe5:  //PUSH    H
             //Push to stack
             //(H) <- ((SP) - 1)
@@ -2180,7 +2285,15 @@ void Emulate8080Op(State8080* state){
             }
             break;
         case 0xe9: UnimplementedInstruction(state); break;
-        case 0xea: UnimplementedInstruction(state); break;
+        case 0xea:  //JPE    D16
+            //Conditional jump (even parity)
+            if (state->cc.p == 1){
+                Jump(state, opcode);
+            }
+            else{
+                state->pc += 2;
+            }
+            break;
         case 0xeb:  //XCHG
             //Exchange H and L with D and E
             // (H) <-> (D)
@@ -2195,8 +2308,23 @@ void Emulate8080Op(State8080* state){
             state->e = temp;
             }
             break;
-        case 0xec: UnimplementedInstruction(state); break;
-        case 0xed: UnimplementedInstruction(state); break;
+        case 0xec:  //CPE    D16
+            //Condition call (even parity)
+            if (state->cc.p == 1){
+                Call(state, opcode);
+            }
+            else{
+                state->pc += 2;
+            }
+            break;
+        case 0xed:  //CALL   D16
+            //Call
+            //((SP) - 1) <- (PCH)
+            //((SP) - 2) <- (PCL)
+            //(SP) <- (SP) - 2
+            //(PC) <- (byte 3) (byte 2)
+            Call(state, opcode);
+            break;
         case 0xee:  //XRI    D8
             //Exclusive OR Immediate
             //A <- A ^ byte 2
@@ -2238,11 +2366,27 @@ void Emulate8080Op(State8080* state){
             state->a = state->memory[state->sp + 1];
             state->sp += 2;
             break;
-        case 0xf2: UnimplementedInstruction(state); break;
+        case 0xf2:  //JP     D16
+            //Conditional jump (positive integer)
+            if (state->cc.s == 0){
+                Jump(state, opcode);
+            }
+            else{
+                state->pc += 2;
+            }
+            break;
         case 0xf3:  //DI
             //Disable interrupts
             state->int_enable = 0; break;
-        case 0xf4: UnimplementedInstruction(state); break;
+        case 0xf4:  //CP     D16
+            //Condition call (positive integer)
+            if (state->cc.s == 0){
+                Call(state, opcode);
+            }
+            else{
+                state->pc += 2;
+            }
+            break;
         case 0xf5:  //PUSH   PSW
             //Push processor status word
             //((SP) - 1) <- (A)
@@ -2296,12 +2440,35 @@ void Emulate8080Op(State8080* state){
             state->sp = state->h << 8;
             state->sp = state->sp | state->l;
             break;
-        case 0xfa: UnimplementedInstruction(state); break;
+        case 0xfa:  //JM     D16
+            //Conditional jump (negative integer ("minus"))
+            if (state->cc.s == 1){
+                Jump(state, opcode);
+            }
+            else{
+                state->pc += 2;
+            }
+            break;
         case 0xfb:  //EI
             //Enable interrupts
             state->int_enable = 1; break;
-        case 0xfc: UnimplementedInstruction(state); break;
-        case 0xfd: UnimplementedInstruction(state); break;
+        case 0xfc:  //CM     D16
+            //Condition call (negative integer ("minus"))
+            if (state->cc.s == 1){
+                Call(state, opcode);
+            }
+            else{
+                state->pc += 2;
+            }
+            break;
+        case 0xfd:  //CALL   D16
+            //Call
+            //((SP) - 1) <- (PCH)
+            //((SP) - 2) <- (PCL)
+            //(SP) <- (SP) - 2
+            //(PC) <- (byte 3) (byte 2)
+            Call(state, opcode);
+            break;
         case 0xfe:  //CPI    D8
             //Compare Immediate
             //A - byte 2
@@ -2323,6 +2490,20 @@ void Emulate8080Op(State8080* state){
     }
     printf("\n");
     state->pc+=1;
+}
+
+void Jump(State8080* state, unsigned char *opcode){
+    state->pc = (opcode[2] << 8) | opcode[1];
+    state->pc--;
+}
+
+void Call(State8080* state, unsigned char *opcode){
+    //Store the address of the next instruction (which is state->pc + 2) on the stack pointer (remember the stack "grows downward").
+    state->memory[state->sp - 1] = (state->pc + 2) >> 8;
+    state->memory[state->sp - 2] = (state->pc + 2) & 0xff;
+    state->sp -= 2;
+    state->pc = (opcode[2] << 8) | opcode[1];
+    state->pc--;
 }
 
 void Pop(State8080* state, uint8_t *high, uint8_t *low){
