@@ -35,6 +35,7 @@ void UnimplementedInstruction(State8080*);
 void Emulate8080Op(State8080*);
 void Jump(State8080*, unsigned char *);
 void Call(State8080*, unsigned char *);
+void Restart(State8080*, uint16_t);
 void Pop(State8080*, uint8_t *, uint8_t *);
 void Push(State8080*, uint8_t *, uint8_t *);
 int Parity(uint8_t);
@@ -2017,7 +2018,10 @@ void Emulate8080Op(State8080* state){
             }
             //Note: auxiliary carry not implemented.
             break;
-        case 0xc7: UnimplementedInstruction(state); break;
+        case 0xc7:  //RST    0
+            //Restart. CALL 0x0000
+            Restart(state, 0x0000);
+            break;
         case 0xc8:  //RZ
             //Conditional Return
             //If Z, RET:
@@ -2080,7 +2084,10 @@ void Emulate8080Op(State8080* state){
             }
             //Note: auxiliary carry not implemented.
             break;
-        case 0xcf: UnimplementedInstruction(state); break;
+        case 0xcf:  //RST    1
+            //Restart. CALL 0x0008
+            Restart(state, 0x0008);
+            break;
         case 0xd0:  //RNC
             //Conditional Return
             //If NCY, RET:
@@ -2140,7 +2147,10 @@ void Emulate8080Op(State8080* state){
             }
             //Note: auxiliary carry not implemented.
             break;
-        case 0xd7: UnimplementedInstruction(state); break;
+        case 0xd7:  //RST    2
+            //Restart. CALL 0x0010
+            Restart(state, 0x0010);
+            break;
         case 0xd8:  //RC
             //Conditional Return
             //If CY, RET:
@@ -2205,7 +2215,10 @@ void Emulate8080Op(State8080* state){
             }
             //Note: auxiliary carry not implemented.
             break;
-        case 0xdf: UnimplementedInstruction(state); break;
+        case 0xdf:  //RST    3
+            //Restart. CALL 0x0018
+            Restart(state, 0x0018);
+            break;
         case 0xe0:  //RPO
             //Conditional Return
             //If Parity is odd, RET:
@@ -2275,7 +2288,10 @@ void Emulate8080Op(State8080* state){
             state->pc += 1;
             }
             break;
-        case 0xe7: UnimplementedInstruction(state); break;
+        case 0xe7:  //RST    4
+            //Restart. CALL 0x0020
+            Restart(state, 0x0020);
+            break;
         case 0xe8:  //RPE
             //Conditional Return
             //If Parity is even, RET:
@@ -2284,7 +2300,11 @@ void Emulate8080Op(State8080* state){
                 state->sp += 2;
             }
             break;
-        case 0xe9: UnimplementedInstruction(state); break;
+        case 0xe9:  //PCHL
+            //Jump H and L indirect - move H and L to PC
+            state->pc = (state->h << 8) | state->l;
+            state->pc--;
+            break;
         case 0xea:  //JPE    D16
             //Conditional jump (even parity)
             if (state->cc.p == 1){
@@ -2340,7 +2360,10 @@ void Emulate8080Op(State8080* state){
             state->pc += 1;
             }
             break;
-        case 0xef: UnimplementedInstruction(state); break;
+        case 0xef:  //RST    5
+            //Restart. CALL 0x0028
+            Restart(state, 0x0028);
+            break;
         case 0xf0:  //RP
             //Conditional Return
             //If sign flag is 0 (i.e result was a positive integer), RET:
@@ -2425,7 +2448,10 @@ void Emulate8080Op(State8080* state){
             state->pc += 1;
             }
             break;
-        case 0xf7: UnimplementedInstruction(state); break;
+        case 0xf7:  //RST    6
+            //Restart. CALL 0x0030
+            Restart(state, 0x0030);
+            break;
         case 0xf8:  //RM
             //Conditional Return
             //If sign flag is 1 (i.e result was a negative integer), RET:
@@ -2483,10 +2509,10 @@ void Emulate8080Op(State8080* state){
             }
             //Note: auxiliary carry not implemented.
             break;
-        case 0xff: UnimplementedInstruction(state); break;
-
-
-
+        case 0xff:  //RST    7
+            //Restart. CALL 0x0038
+            Restart(state, 0x0038);
+            break;
     }
     printf("\n");
     state->pc+=1;
@@ -2506,10 +2532,17 @@ void Call(State8080* state, unsigned char *opcode){
     state->pc--;
 }
 
+void Restart(State8080* state, uint16_t newaddr){
+    state->memory[state->sp - 1] = ((state->pc + 1) >> 8) & 0xff;
+    state->memory[state->sp - 2] = (state->pc + 1) & 0xff;
+    state->sp -= 2;
+    state->pc = newaddr;
+}
+
 void Pop(State8080* state, uint8_t *high, uint8_t *low){
-            *low = state->memory[state->sp];
-            *high = state->memory[state->sp + 1];
-            state->sp += 2;
+    *low = state->memory[state->sp];
+    *high = state->memory[state->sp + 1];
+    state->sp += 2;
 }
 
 void Push(State8080* state, uint8_t *high, uint8_t *low){
