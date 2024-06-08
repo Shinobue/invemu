@@ -18,4 +18,4 @@ invaders.zip
 Programming Guides/
 
 #ignore disassembler file output
-Disassembler/Disassembler To File/*.txt
+*output.txt
