@@ -19,3 +19,6 @@ Programming Guides/
 
 #ignore disassembler file output
 *output.txt
+
+#ignore cpudiag
+cpudiag.*

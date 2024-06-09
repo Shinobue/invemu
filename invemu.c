@@ -335,7 +335,7 @@ void Disassemble8080Op(unsigned char *codebuffer, int pc){
         case 0xe7: printf("RST    4       "); break;
         case 0xe8: printf("RPE            "); break;
         case 0xe9: printf("PCHL           "); break;
-        case 0xea: printf("JPE    $%02x%02x", code[2], code[1]); opbytes = 3; break;
+        case 0xea: printf("JPE    $%02x%02x   ", code[2], code[1]); opbytes = 3; break;
         case 0xeb: printf("XCHG           "); break;
         case 0xec: printf("CPE    $%02x%02x   ", code[2], code[1]); opbytes = 3; break;
         case 0xed: printf("CALL   $%02x%02x   ", code[2], code[1]); opbytes = 3; break;
@@ -879,7 +879,7 @@ void Emulate8080Op(State8080* state, int fileoutputflag, FILE *output){
             uint16_t result;
             uint16_t offset;
             offset = (state->h << 8) | state->l;
-            result = state->h - 1;
+            result = state->memory[offset] - 1;
             state->cc.z = ((result & 0xff) == 0);
             state->cc.s = ((result & 0x80) != 0);
             state->cc.p = Parity((uint8_t) (result & 0xff));
@@ -1772,13 +1772,13 @@ void Emulate8080Op(State8080* state, int fileoutputflag, FILE *output){
             //Note: auxiliary carry not implemented.
             break;
         case 0x9e:  //SBB    M
-            //Add memory with borrow
+            //Subtract memory with borrow
             //A <- A - (HL) - CY
             {
             uint16_t result;
             uint16_t offset;
             offset = (state->h << 8) | state->l;
-            result = state->a + state->memory[offset] + state->cc.cy;
+            result = state->a - state->memory[offset] - state->cc.cy;
             state->cc.z = ((result & 0xff) == 0);
             state->cc.s = ((result & 0x80) != 0);
             state->cc.p = Parity((uint8_t) (result & 0xff));
@@ -2750,7 +2750,7 @@ void Emulate8080Op(State8080* state, int fileoutputflag, FILE *output){
         case 0xf8:  //RM
             //Conditional Return
             //If sign flag is 1 (i.e result was a negative integer), RET:
-            if (state->cc.s == 0){
+            if (state->cc.s == 1){
                 state->pc = (state->memory[state->sp + 1] << 8) | state->memory[state->sp];
                 state->sp += 2;
             }
