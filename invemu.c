@@ -435,10 +435,10 @@ void Emulate8080Op(State8080* state, int fileoutputflag, FILE *output){
             state->cc.s = ((result & 0x80) != 0);
             //See parity function.
             state->cc.p = Parity((uint8_t) (result & 0xff));
+            //If the 4 rightmost bits of the result are less than those of the original value, then a value was carried into bit 4 (0001 0000), so set, otherwise reset.
+            state->cc.ac = ((result & 0x0F) < (state->b & 0x0F));
             //Set actual result to be "result & 0xff", since the actual result is an 8-bit number, and 0xff is 0000 0000 1111 1111. I.e mask out the leftmost 8 bits.
             state->b = result & 0xff;
-
-            //Note: auxiliary carry not implemented.
             }
             break;
         case 0x05:  //DCR    B
@@ -450,8 +450,8 @@ void Emulate8080Op(State8080* state, int fileoutputflag, FILE *output){
             state->cc.z = ((result & 0xff) == 0);
             state->cc.s = ((result & 0x80) != 0);
             state->cc.p = Parity((uint8_t) (result & 0xff));
+            state->cc.ac = ((result & 0x0F) < (state->b & 0x0F)); //For subtraction, processor performs addition on the two's complement of the number to subtrcat (i.e -1 here), and checks for a borrow in that addition. Therefore less than (<), just like with addition.
             state->b = result & 0xff;
-            //Note: auxiliary carry not implemented.
             }
             break;
         case 0x06:  //MVI    B
@@ -514,8 +514,8 @@ void Emulate8080Op(State8080* state, int fileoutputflag, FILE *output){
             state->cc.z = ((result & 0xff) == 0);
             state->cc.s = ((result & 0x80) != 0);
             state->cc.p = Parity((uint8_t) (result & 0xff));
+            state->cc.ac = ((result & 0x0F) < (state->c & 0x0F));
             state->c = result & 0xff;
-            //Note: auxiliary carry not implemented.
             }
             break;
         case 0x0d:  //DCR    C
@@ -527,8 +527,8 @@ void Emulate8080Op(State8080* state, int fileoutputflag, FILE *output){
             state->cc.z = ((result & 0xff) == 0);
             state->cc.s = ((result & 0x80) != 0);
             state->cc.p = Parity((uint8_t) (result & 0xff));
+            state->cc.ac = ((result & 0x0F) < (state->c & 0x0F));
             state->c = result & 0xff;
-            //Note: auxiliary carry not implemented.
             }
             break;
         case 0x0e:  //MVI    C
@@ -579,8 +579,8 @@ void Emulate8080Op(State8080* state, int fileoutputflag, FILE *output){
             state->cc.z = ((result & 0xff) == 0);
             state->cc.s = ((result & 0x80) != 0);
             state->cc.p = Parity((uint8_t) (result & 0xff));
+            state->cc.ac = ((result & 0x0F) < (state->d & 0x0F));
             state->d = result & 0xff;
-            //Note: auxiliary carry not implemented.
             }
             break;
         case 0x15:  //DCR    D
@@ -592,8 +592,8 @@ void Emulate8080Op(State8080* state, int fileoutputflag, FILE *output){
             state->cc.z = ((result & 0xff) == 0);
             state->cc.s = ((result & 0x80) != 0);
             state->cc.p = Parity((uint8_t) (result & 0xff));
+            state->cc.ac = ((result & 0x0F) < (state->d & 0x0F));
             state->d = result & 0xff;
-            //Note: auxiliary carry not implemented.
             }
             break;
         case 0x16:  //MVI    D
@@ -658,8 +658,8 @@ void Emulate8080Op(State8080* state, int fileoutputflag, FILE *output){
             state->cc.z = ((result & 0xff) == 0);
             state->cc.s = ((result & 0x80) != 0);
             state->cc.p = Parity((uint8_t) (result & 0xff));
+            state->cc.ac = ((result & 0x0F) < (state->e & 0x0F));
             state->e = result & 0xff;
-            //Note: auxiliary carry not implemented.
             }
             break;
         case 0x1d:  //DCR    E
@@ -671,8 +671,8 @@ void Emulate8080Op(State8080* state, int fileoutputflag, FILE *output){
             state->cc.z = ((result & 0xff) == 0);
             state->cc.s = ((result & 0x80) != 0);
             state->cc.p = Parity((uint8_t) (result & 0xff));
+            state->cc.ac = ((result & 0x0F) < (state->e & 0x0F));
             state->e = result & 0xff;
-            //Note: auxiliary carry not implemented.
             }
             break;
         case 0x1e:  //MVI    E
@@ -729,8 +729,8 @@ void Emulate8080Op(State8080* state, int fileoutputflag, FILE *output){
             state->cc.z = ((result & 0xff) == 0);
             state->cc.s = ((result & 0x80) != 0);
             state->cc.p = Parity((uint8_t) (result & 0xff));
+            state->cc.ac = ((result & 0x0F) < (state->h & 0x0F));
             state->h = result & 0xff;
-            //Note: auxiliary carry not implemented.
             }
             break;
         case 0x25:  //DCR    H
@@ -742,8 +742,8 @@ void Emulate8080Op(State8080* state, int fileoutputflag, FILE *output){
             state->cc.z = ((result & 0xff) == 0);
             state->cc.s = ((result & 0x80) != 0);
             state->cc.p = Parity((uint8_t) (result & 0xff));
+            state->cc.ac = ((result & 0x0F) < (state->h & 0x0F));
             state->h = result & 0xff;
-            //Note: auxiliary carry not implemented.
             }
             break;
         case 0x26:  //MVI    H
@@ -804,8 +804,8 @@ void Emulate8080Op(State8080* state, int fileoutputflag, FILE *output){
             state->cc.z = ((result & 0xff) == 0);
             state->cc.s = ((result & 0x80) != 0);
             state->cc.p = Parity((uint8_t) (result & 0xff));
+            state->cc.ac = ((result & 0x0F) < (state->l & 0x0F));
             state->l = result & 0xff;
-            //Note: auxiliary carry not implemented.
             }
             break;
         case 0x2d:  //DCR    L
@@ -817,8 +817,8 @@ void Emulate8080Op(State8080* state, int fileoutputflag, FILE *output){
             state->cc.z = ((result & 0xff) == 0);
             state->cc.s = ((result & 0x80) != 0);
             state->cc.p = Parity((uint8_t) (result & 0xff));
+            state->cc.ac = ((result & 0x0F) < (state->l & 0x0F));
             state->l = result & 0xff;
-            //Note: auxiliary carry not implemented.
             }
             break;
         case 0x2e:  //MVI    L
@@ -868,8 +868,8 @@ void Emulate8080Op(State8080* state, int fileoutputflag, FILE *output){
             state->cc.z = ((result & 0xff) == 0);
             state->cc.s = ((result & 0x80) != 0);
             state->cc.p = Parity((uint8_t) (result & 0xff));
+            state->cc.ac = ((result & 0x0F) < (state->memory[offset] & 0x0F));
             state->memory[offset] = result & 0xff;
-            //Note: auxiliary carry not implemented.
             }
             break;
         case 0x35:  //DCR    M
@@ -883,8 +883,8 @@ void Emulate8080Op(State8080* state, int fileoutputflag, FILE *output){
             state->cc.z = ((result & 0xff) == 0);
             state->cc.s = ((result & 0x80) != 0);
             state->cc.p = Parity((uint8_t) (result & 0xff));
+            state->cc.ac = ((result & 0x0F) < (state->memory[offset] & 0x0F));
             state->memory[offset] = result & 0xff;
-            //Note: auxiliary carry not implemented.
             }
             break;
         case 0x36:  //MVI    M
@@ -944,8 +944,8 @@ void Emulate8080Op(State8080* state, int fileoutputflag, FILE *output){
             state->cc.z = ((result & 0xff) == 0);
             state->cc.s = ((result & 0x80) != 0);
             state->cc.p = Parity((uint8_t) (result & 0xff));
+            state->cc.ac = ((result & 0x0F) < (state->a & 0x0F));
             state->a = result & 0xff;
-            //Note: auxiliary carry not implemented.
             }
             break;
         case 0x3d:  //DCR    A
@@ -957,8 +957,8 @@ void Emulate8080Op(State8080* state, int fileoutputflag, FILE *output){
             state->cc.z = ((result & 0xff) == 0);
             state->cc.s = ((result & 0x80) != 0);
             state->cc.p = Parity((uint8_t) (result & 0xff));
+            state->cc.ac = ((result & 0x0F) < (state->a & 0x0F));
             state->a = result & 0xff;
-            //Note: auxiliary carry not implemented.
             }
             break;
         case 0x3e:  //MVI    A
@@ -1355,9 +1355,9 @@ void Emulate8080Op(State8080* state, int fileoutputflag, FILE *output){
             state->cc.s = ((result & 0x80) != 0);
             state->cc.p = Parity((uint8_t) (result & 0xff));
             state->cc.cy = (result > 0xff);
+            state->cc.ac = ((result & 0x0F) < (state->a & 0x0F));
             state->a = result & 0xff;
             }
-            //Note: auxiliary carry not implemented.
             break;
         case 0x81:  //ADD    C
             //Add Register
@@ -1369,9 +1369,9 @@ void Emulate8080Op(State8080* state, int fileoutputflag, FILE *output){
             state->cc.s = ((result & 0x80) != 0);
             state->cc.p = Parity((uint8_t) (result & 0xff));
             state->cc.cy = (result > 0xff);
+            state->cc.ac = ((result & 0x0F) < (state->a & 0x0F));
             state->a = result & 0xff;
             }
-            //Note: auxiliary carry not implemented.
             break;
         case 0x82:  //ADD    D
             //Add Register
@@ -1383,9 +1383,9 @@ void Emulate8080Op(State8080* state, int fileoutputflag, FILE *output){
             state->cc.s = ((result & 0x80) != 0);
             state->cc.p = Parity((uint8_t) (result & 0xff));
             state->cc.cy = (result > 0xff);
+            state->cc.ac = ((result & 0x0F) < (state->a & 0x0F));
             state->a = result & 0xff;
             }
-            //Note: auxiliary carry not implemented.
             break;
         case 0x83:  //ADD    E
             //Add Register
@@ -1397,9 +1397,9 @@ void Emulate8080Op(State8080* state, int fileoutputflag, FILE *output){
             state->cc.s = ((result & 0x80) != 0);
             state->cc.p = Parity((uint8_t) (result & 0xff));
             state->cc.cy = (result > 0xff);
+            state->cc.ac = ((result & 0x0F) < (state->a & 0x0F));
             state->a = result & 0xff;
             }
-            //Note: auxiliary carry not implemented.
             break;
         case 0x84:  //ADD    H
             //Add Register
@@ -1411,9 +1411,9 @@ void Emulate8080Op(State8080* state, int fileoutputflag, FILE *output){
             state->cc.s = ((result & 0x80) != 0);
             state->cc.p = Parity((uint8_t) (result & 0xff));
             state->cc.cy = (result > 0xff);
+            state->cc.ac = ((result & 0x0F) < (state->a & 0x0F));
             state->a = result & 0xff;
             }
-            //Note: auxiliary carry not implemented.
             break;
         case 0x85:  //ADD    L
             //Add Register
@@ -1425,9 +1425,9 @@ void Emulate8080Op(State8080* state, int fileoutputflag, FILE *output){
             state->cc.s = ((result & 0x80) != 0);
             state->cc.p = Parity((uint8_t) (result & 0xff));
             state->cc.cy = (result > 0xff);
+            state->cc.ac = ((result & 0x0F) < (state->a & 0x0F));
             state->a = result & 0xff;
             }
-            //Note: auxiliary carry not implemented.
             break;
         case 0x86:  //ADD    M
             //Add memory
@@ -1441,9 +1441,9 @@ void Emulate8080Op(State8080* state, int fileoutputflag, FILE *output){
             state->cc.s = ((result & 0x80) != 0);
             state->cc.p = Parity((uint8_t) (result & 0xff));
             state->cc.cy = (result > 0xff);
+            state->cc.ac = ((result & 0x0F) < (state->a & 0x0F));
             state->a = result & 0xff;
             }
-            //Note: auxiliary carry not implemented.
             break;
         case 0x87:  //ADD    A
             //Add Register
@@ -1455,9 +1455,9 @@ void Emulate8080Op(State8080* state, int fileoutputflag, FILE *output){
             state->cc.s = ((result & 0x80) != 0);
             state->cc.p = Parity((uint8_t) (result & 0xff));
             state->cc.cy = (result > 0xff);
+            state->cc.ac = ((result & 0x0F) < (state->a & 0x0F));
             state->a = result & 0xff;
             }
-            //Note: auxiliary carry not implemented.
             break;
         case 0x88:  //ADC    B
             //Add Register with carry
@@ -1469,9 +1469,9 @@ void Emulate8080Op(State8080* state, int fileoutputflag, FILE *output){
             state->cc.s = ((result & 0x80) != 0);
             state->cc.p = Parity((uint8_t) (result & 0xff));
             state->cc.cy = (result > 0xff);
+            state->cc.ac = ((result & 0x0F) < (state->a & 0x0F));
             state->a = result & 0xff;
             }
-            //Note: auxiliary carry not implemented.
             break;
         case 0x89:  //ADC    C
             //Add Register with carry
@@ -1483,9 +1483,9 @@ void Emulate8080Op(State8080* state, int fileoutputflag, FILE *output){
             state->cc.s = ((result & 0x80) != 0);
             state->cc.p = Parity((uint8_t) (result & 0xff));
             state->cc.cy = (result > 0xff);
+            state->cc.ac = ((result & 0x0F) < (state->a & 0x0F));
             state->a = result & 0xff;
             }
-            //Note: auxiliary carry not implemented.
             break;
         case 0x8a:  //ADC    D
             //Add Register with carry
@@ -1497,9 +1497,9 @@ void Emulate8080Op(State8080* state, int fileoutputflag, FILE *output){
             state->cc.s = ((result & 0x80) != 0);
             state->cc.p = Parity((uint8_t) (result & 0xff));
             state->cc.cy = (result > 0xff);
+            state->cc.ac = ((result & 0x0F) < (state->a & 0x0F));
             state->a = result & 0xff;
             }
-            //Note: auxiliary carry not implemented.
             break;
         case 0x8b:  //ADC    E
             //Add Register with carry
@@ -1511,9 +1511,9 @@ void Emulate8080Op(State8080* state, int fileoutputflag, FILE *output){
             state->cc.s = ((result & 0x80) != 0);
             state->cc.p = Parity((uint8_t) (result & 0xff));
             state->cc.cy = (result > 0xff);
+            state->cc.ac = ((result & 0x0F) < (state->a & 0x0F));
             state->a = result & 0xff;
             }
-            //Note: auxiliary carry not implemented.
             break;
         case 0x8c:  //ADC    H
             //Add Register with carry
@@ -1525,9 +1525,9 @@ void Emulate8080Op(State8080* state, int fileoutputflag, FILE *output){
             state->cc.s = ((result & 0x80) != 0);
             state->cc.p = Parity((uint8_t) (result & 0xff));
             state->cc.cy = (result > 0xff);
+            state->cc.ac = ((result & 0x0F) < (state->a & 0x0F));
             state->a = result & 0xff;
             }
-            //Note: auxiliary carry not implemented.
             break;
         case 0x8d:  //ADC    L
             //Add Register with carry
@@ -1539,9 +1539,9 @@ void Emulate8080Op(State8080* state, int fileoutputflag, FILE *output){
             state->cc.s = ((result & 0x80) != 0);
             state->cc.p = Parity((uint8_t) (result & 0xff));
             state->cc.cy = (result > 0xff);
+            state->cc.ac = ((result & 0x0F) < (state->a & 0x0F));
             state->a = result & 0xff;
             }
-            //Note: auxiliary carry not implemented.
             break;
         case 0x8e:  //ADC    M
             //Add memory with carry
@@ -1555,9 +1555,9 @@ void Emulate8080Op(State8080* state, int fileoutputflag, FILE *output){
             state->cc.s = ((result & 0x80) != 0);
             state->cc.p = Parity((uint8_t) (result & 0xff));
             state->cc.cy = (result > 0xff);
+            state->cc.ac = ((result & 0x0F) < (state->a & 0x0F));
             state->a = result & 0xff;
             }
-            //Note: auxiliary carry not implemented.
             break;
         case 0x8f:  //ADC    A
             //Add Register with carry
@@ -1569,9 +1569,9 @@ void Emulate8080Op(State8080* state, int fileoutputflag, FILE *output){
             state->cc.s = ((result & 0x80) != 0);
             state->cc.p = Parity((uint8_t) (result & 0xff));
             state->cc.cy = (result > 0xff);
+            state->cc.ac = ((result & 0x0F) < (state->a & 0x0F));
             state->a = result & 0xff;
             }
-            //Note: auxiliary carry not implemented.
             break;
         case 0x90:  //SUB    B
             //Subtract Register
@@ -1583,9 +1583,9 @@ void Emulate8080Op(State8080* state, int fileoutputflag, FILE *output){
             state->cc.s = ((result & 0x80) != 0);
             state->cc.p = Parity((uint8_t) (result & 0xff));
             state->cc.cy = (result > 0xff);
+            state->cc.ac = ((result & 0x0F) < (state->a & 0x0F));
             state->a = result & 0xff;
             }
-            //Note: auxiliary carry not implemented.
             break;
         case 0x91:  //SUB    C
             //Subtract Register
@@ -1597,9 +1597,9 @@ void Emulate8080Op(State8080* state, int fileoutputflag, FILE *output){
             state->cc.s = ((result & 0x80) != 0);
             state->cc.p = Parity((uint8_t) (result & 0xff));
             state->cc.cy = (result > 0xff);
+            state->cc.ac = ((result & 0x0F) < (state->a & 0x0F));
             state->a = result & 0xff;
             }
-            //Note: auxiliary carry not implemented.
             break;
         case 0x92:  //SUB    D
             //Subtract Register
@@ -1611,9 +1611,9 @@ void Emulate8080Op(State8080* state, int fileoutputflag, FILE *output){
             state->cc.s = ((result & 0x80) != 0);
             state->cc.p = Parity((uint8_t) (result & 0xff));
             state->cc.cy = (result > 0xff);
+            state->cc.ac = ((result & 0x0F) < (state->a & 0x0F));
             state->a = result & 0xff;
             }
-            //Note: auxiliary carry not implemented.
             break;
         case 0x93:  //SUB    E
             //Subtract Register
@@ -1625,9 +1625,9 @@ void Emulate8080Op(State8080* state, int fileoutputflag, FILE *output){
             state->cc.s = ((result & 0x80) != 0);
             state->cc.p = Parity((uint8_t) (result & 0xff));
             state->cc.cy = (result > 0xff);
+            state->cc.ac = ((result & 0x0F) < (state->a & 0x0F));
             state->a = result & 0xff;
             }
-            //Note: auxiliary carry not implemented.
             break;
         case 0x94:  //SUB    H
             //Subtract Register
@@ -1639,9 +1639,9 @@ void Emulate8080Op(State8080* state, int fileoutputflag, FILE *output){
             state->cc.s = ((result & 0x80) != 0);
             state->cc.p = Parity((uint8_t) (result & 0xff));
             state->cc.cy = (result > 0xff);
+            state->cc.ac = ((result & 0x0F) < (state->a & 0x0F));
             state->a = result & 0xff;
             }
-            //Note: auxiliary carry not implemented.
             break;
         case 0x95:  //SUB    L
             //Subtract Register
@@ -1653,9 +1653,9 @@ void Emulate8080Op(State8080* state, int fileoutputflag, FILE *output){
             state->cc.s = ((result & 0x80) != 0);
             state->cc.p = Parity((uint8_t) (result & 0xff));
             state->cc.cy = (result > 0xff);
+            state->cc.ac = ((result & 0x0F) < (state->a & 0x0F));
             state->a = result & 0xff;
             }
-            //Note: auxiliary carry not implemented.
             break;
         case 0x96:  //SUB    M
             //Subtract memory
@@ -1669,9 +1669,9 @@ void Emulate8080Op(State8080* state, int fileoutputflag, FILE *output){
             state->cc.s = ((result & 0x80) != 0);
             state->cc.p = Parity((uint8_t) (result & 0xff));
             state->cc.cy = (result > 0xff);
+            state->cc.ac = ((result & 0x0F) < (state->a & 0x0F));
             state->a = result & 0xff;
             }
-            //Note: auxiliary carry not implemented.
             break;
         case 0x97:  //SUB    A
             //Subtract Register
@@ -1683,9 +1683,9 @@ void Emulate8080Op(State8080* state, int fileoutputflag, FILE *output){
             state->cc.s = ((result & 0x80) != 0);
             state->cc.p = Parity((uint8_t) (result & 0xff));
             state->cc.cy = (result > 0xff);
+            state->cc.ac = ((result & 0x0F) < (state->a & 0x0F));
             state->a = result & 0xff;
             }
-            //Note: auxiliary carry not implemented.
             break;
         case 0x98:  //SBB    B
             //Subtract Register with borrow
@@ -1697,9 +1697,9 @@ void Emulate8080Op(State8080* state, int fileoutputflag, FILE *output){
             state->cc.s = ((result & 0x80) != 0);
             state->cc.p = Parity((uint8_t) (result & 0xff));
             state->cc.cy = (result > 0xff);
+            state->cc.ac = ((result & 0x0F) < (state->a & 0x0F));
             state->a = result & 0xff;
             }
-            //Note: auxiliary carry not implemented.
             break;
         case 0x99:  //SBB    C
             //Subtract Register with borrow
@@ -1711,9 +1711,9 @@ void Emulate8080Op(State8080* state, int fileoutputflag, FILE *output){
             state->cc.s = ((result & 0x80) != 0);
             state->cc.p = Parity((uint8_t) (result & 0xff));
             state->cc.cy = (result > 0xff);
+            state->cc.ac = ((result & 0x0F) < (state->a & 0x0F));
             state->a = result & 0xff;
             }
-            //Note: auxiliary carry not implemented.
             break;
         case 0x9a:  //SBB    D
             //Subtract Register with borrow
@@ -1725,9 +1725,9 @@ void Emulate8080Op(State8080* state, int fileoutputflag, FILE *output){
             state->cc.s = ((result & 0x80) != 0);
             state->cc.p = Parity((uint8_t) (result & 0xff));
             state->cc.cy = (result > 0xff);
+            state->cc.ac = ((result & 0x0F) < (state->a & 0x0F));
             state->a = result & 0xff;
             }
-            //Note: auxiliary carry not implemented.
             break;
         case 0x9b:  //SBB    E
             //Subtract Register with borrow
@@ -1739,9 +1739,9 @@ void Emulate8080Op(State8080* state, int fileoutputflag, FILE *output){
             state->cc.s = ((result & 0x80) != 0);
             state->cc.p = Parity((uint8_t) (result & 0xff));
             state->cc.cy = (result > 0xff);
+            state->cc.ac = ((result & 0x0F) < (state->a & 0x0F));
             state->a = result & 0xff;
             }
-            //Note: auxiliary carry not implemented.
             break;
         case 0x9c:  //SBB    H
             //Subtract Register with borrow
@@ -1753,9 +1753,9 @@ void Emulate8080Op(State8080* state, int fileoutputflag, FILE *output){
             state->cc.s = ((result & 0x80) != 0);
             state->cc.p = Parity((uint8_t) (result & 0xff));
             state->cc.cy = (result > 0xff);
+            state->cc.ac = ((result & 0x0F) < (state->a & 0x0F));
             state->a = result & 0xff;
             }
-            //Note: auxiliary carry not implemented.
             break;
         case 0x9d:  //SBB    L
             //Subtract Register with borrow
@@ -1767,9 +1767,9 @@ void Emulate8080Op(State8080* state, int fileoutputflag, FILE *output){
             state->cc.s = ((result & 0x80) != 0);
             state->cc.p = Parity((uint8_t) (result & 0xff));
             state->cc.cy = (result > 0xff);
+            state->cc.ac = ((result & 0x0F) < (state->a & 0x0F));
             state->a = result & 0xff;
             }
-            //Note: auxiliary carry not implemented.
             break;
         case 0x9e:  //SBB    M
             //Subtract memory with borrow
@@ -1783,9 +1783,9 @@ void Emulate8080Op(State8080* state, int fileoutputflag, FILE *output){
             state->cc.s = ((result & 0x80) != 0);
             state->cc.p = Parity((uint8_t) (result & 0xff));
             state->cc.cy = (result > 0xff);
+            state->cc.ac = ((result & 0x0F) < (state->a & 0x0F));
             state->a = result & 0xff;
             }
-            //Note: auxiliary carry not implemented.
             break;
         case 0x9f:  //SBB    A
             //Subtract Register with borrow
@@ -1797,9 +1797,9 @@ void Emulate8080Op(State8080* state, int fileoutputflag, FILE *output){
             state->cc.s = ((result & 0x80) != 0);
             state->cc.p = Parity((uint8_t) (result & 0xff));
             state->cc.cy = (result > 0xff);
+            state->cc.ac = ((result & 0x0F) < (state->a & 0x0F));
             state->a = result & 0xff;
             }
-            //Note: auxiliary carry not implemented.
             break;
         case 0xa0:  //ANA    B
             //AND Register
@@ -1811,9 +1811,9 @@ void Emulate8080Op(State8080* state, int fileoutputflag, FILE *output){
             state->cc.s = ((result & 0x80) != 0);
             state->cc.p = Parity((uint8_t) (result & 0xff));
             state->cc.cy = 0x0;
+            state->cc.ac = ((state->a & 0x8) | (state->b & 0x8)); //ac is set to the logical OR of bit 3 of the values in operation. In this case, the OR of bit 3 (0000 1000) in A & B
             state->a = result & 0xff;
             }
-            //Note: auxiliary carry not implemented.
             break;
         case 0xa1:  //ANA    C
             //AND Register
@@ -1825,9 +1825,9 @@ void Emulate8080Op(State8080* state, int fileoutputflag, FILE *output){
             state->cc.s = ((result & 0x80) != 0);
             state->cc.p = Parity((uint8_t) (result & 0xff));
             state->cc.cy = 0x0;
+            state->cc.ac = ((state->a & 0x8) | (state->c & 0x8));
             state->a = result & 0xff;
             }
-            //Note: auxiliary carry not implemented.
             break;
         case 0xa2:  //ANA    D
             //AND Register
@@ -1839,9 +1839,9 @@ void Emulate8080Op(State8080* state, int fileoutputflag, FILE *output){
             state->cc.s = ((result & 0x80) != 0);
             state->cc.p = Parity((uint8_t) (result & 0xff));
             state->cc.cy = 0x0;
+            state->cc.ac = ((state->a & 0x8) | (state->d & 0x8));
             state->a = result & 0xff;
             }
-            //Note: auxiliary carry not implemented.
             break;
         case 0xa3:  //ANA    E
             //AND Register
@@ -1853,9 +1853,9 @@ void Emulate8080Op(State8080* state, int fileoutputflag, FILE *output){
             state->cc.s = ((result & 0x80) != 0);
             state->cc.p = Parity((uint8_t) (result & 0xff));
             state->cc.cy = 0x0;
+            state->cc.ac = ((state->a & 0x8) | (state->e & 0x8));
             state->a = result & 0xff;
             }
-            //Note: auxiliary carry not implemented.
             break;
         case 0xa4:  //ANA    H
             //AND Register
@@ -1867,9 +1867,9 @@ void Emulate8080Op(State8080* state, int fileoutputflag, FILE *output){
             state->cc.s = ((result & 0x80) != 0);
             state->cc.p = Parity((uint8_t) (result & 0xff));
             state->cc.cy = 0x0;
+            state->cc.ac = ((state->a & 0x8) | (state->h & 0x8));
             state->a = result & 0xff;
             }
-            //Note: auxiliary carry not implemented.
             break;
         case 0xa5:  //ANA    L
             //AND Register
@@ -1881,9 +1881,9 @@ void Emulate8080Op(State8080* state, int fileoutputflag, FILE *output){
             state->cc.s = ((result & 0x80) != 0);
             state->cc.p = Parity((uint8_t) (result & 0xff));
             state->cc.cy = 0x0;
+            state->cc.ac = ((state->a & 0x8) | (state->l & 0x8));
             state->a = result & 0xff;
             }
-            //Note: auxiliary carry not implemented.
             break;
         case 0xa6:  //ANA    M
             //AND memory
@@ -1897,9 +1897,9 @@ void Emulate8080Op(State8080* state, int fileoutputflag, FILE *output){
             state->cc.s = ((result & 0x80) != 0);
             state->cc.p = Parity((uint8_t) (result & 0xff));
             state->cc.cy = 0x0;
+            state->cc.ac = ((state->a & 0x8) | (state->memory[offset] & 0x8));
             state->a = result & 0xff;
             }
-            //Note: auxiliary carry not implemented.
             break;
         case 0xa7:  //ANA    A
             //AND Register
@@ -1911,9 +1911,9 @@ void Emulate8080Op(State8080* state, int fileoutputflag, FILE *output){
             state->cc.s = ((result & 0x80) != 0);
             state->cc.p = Parity((uint8_t) (result & 0xff));
             state->cc.cy = 0x0;
+            state->cc.ac = ((state->a & 0x8) | (state->a & 0x8));
             state->a = result & 0xff;
             }
-            //Note: auxiliary carry not implemented.
             break;
         case 0xa8:  //XRA    B
             //Exclusive OR Register
@@ -1925,7 +1925,7 @@ void Emulate8080Op(State8080* state, int fileoutputflag, FILE *output){
             state->cc.s = ((result & 0x80) != 0);
             state->cc.p = Parity((uint8_t) (result & 0xff));
             state->cc.cy = 0x0;
-            state->cc.ac = 0x0;
+            state->cc.ac = 0x0; //Cleared according to the user's manual.
             state->a = result & 0xff;
             }
             break;
@@ -2153,8 +2153,8 @@ void Emulate8080Op(State8080* state, int fileoutputflag, FILE *output){
             state->cc.s = ((result & 0x80) != 0);
             state->cc.p = Parity((uint8_t) (result & 0xff));
             state->cc.cy = (result > 0xff); //If (A - B) > 0xff, then a was less than b (since it loops around, starting at 0xFFFF and going down). Neither A nor B can be larger than 0xff. Same logic as in other commands higher up in this file.
+            state->cc.ac = ((result & 0x0F) < (state->a & 0x0F));
             }
-            //Note: auxiliary carry not implemented.
             break;
         case 0xb9:  //CMP    C
             //Compare Register
@@ -2166,8 +2166,8 @@ void Emulate8080Op(State8080* state, int fileoutputflag, FILE *output){
             state->cc.s = ((result & 0x80) != 0);
             state->cc.p = Parity((uint8_t) (result & 0xff));
             state->cc.cy = (result > 0xff);
+            state->cc.ac = ((result & 0x0F) < (state->a & 0x0F));
             }
-            //Note: auxiliary carry not implemented.
             break;
         case 0xba:  //CMP    D
             //Compare Register
@@ -2179,8 +2179,8 @@ void Emulate8080Op(State8080* state, int fileoutputflag, FILE *output){
             state->cc.s = ((result & 0x80) != 0);
             state->cc.p = Parity((uint8_t) (result & 0xff));
             state->cc.cy = (result > 0xff);
+            state->cc.ac = ((result & 0x0F) < (state->a & 0x0F));
             }
-            //Note: auxiliary carry not implemented.
             break;
         case 0xbb:  //CMP    E
             //Compare Register
@@ -2192,8 +2192,8 @@ void Emulate8080Op(State8080* state, int fileoutputflag, FILE *output){
             state->cc.s = ((result & 0x80) != 0);
             state->cc.p = Parity((uint8_t) (result & 0xff));
             state->cc.cy = (result > 0xff);
+            state->cc.ac = ((result & 0x0F) < (state->a & 0x0F));
             }
-            //Note: auxiliary carry not implemented.
             break;
         case 0xbc:  //CMP    H
             //Compare Register
@@ -2205,8 +2205,8 @@ void Emulate8080Op(State8080* state, int fileoutputflag, FILE *output){
             state->cc.s = ((result & 0x80) != 0);
             state->cc.p = Parity((uint8_t) (result & 0xff));
             state->cc.cy = (result > 0xff);
+            state->cc.ac = ((result & 0x0F) < (state->a & 0x0F));
             }
-            //Note: auxiliary carry not implemented.
             break;
         case 0xbd:  //CMP    L
             //Compare Register
@@ -2218,8 +2218,8 @@ void Emulate8080Op(State8080* state, int fileoutputflag, FILE *output){
             state->cc.s = ((result & 0x80) != 0);
             state->cc.p = Parity((uint8_t) (result & 0xff));
             state->cc.cy = (result > 0xff);
+            state->cc.ac = ((result & 0x0F) < (state->a & 0x0F));
             }
-            //Note: auxiliary carry not implemented.
             break;
         case 0xbe:  //CMP    M
             //Compare Memory
@@ -2233,8 +2233,8 @@ void Emulate8080Op(State8080* state, int fileoutputflag, FILE *output){
             state->cc.s = ((result & 0x80) != 0);
             state->cc.p = Parity((uint8_t) (result & 0xff));
             state->cc.cy = (result > 0xff);
+            state->cc.ac = ((result & 0x0F) < (state->a & 0x0F));
             }
-            //Note: auxiliary carry not implemented.
             break;
         case 0xbf:  //CMP    A
             //Compare Register
@@ -2246,8 +2246,8 @@ void Emulate8080Op(State8080* state, int fileoutputflag, FILE *output){
             state->cc.s = ((result & 0x80) != 0);
             state->cc.p = Parity((uint8_t) (result & 0xff));
             state->cc.cy = (result > 0xff);
+            state->cc.ac = ((result & 0x0F) < (state->a & 0x0F));
             }
-            //Note: auxiliary carry not implemented.
             break;
         case 0xc0:  //RNZ
             //Conditional Return
@@ -2308,10 +2308,10 @@ void Emulate8080Op(State8080* state, int fileoutputflag, FILE *output){
             state->cc.s = ((result & 0x80) != 0);
             state->cc.p = Parity((uint8_t) (result & 0xff));
             state->cc.cy = (result > 0xff);
+            state->cc.ac = ((result & 0x0F) < (state->a & 0x0F));
             state->a = result & 0xff;
             state->pc += 1;
             }
-            //Note: auxiliary carry not implemented.
             break;
         case 0xc7:  //RST    0
             //Restart. CALL 0x0000
@@ -2374,10 +2374,10 @@ void Emulate8080Op(State8080* state, int fileoutputflag, FILE *output){
             state->cc.s = ((result & 0x80) != 0);
             state->cc.p = Parity((uint8_t) (result & 0xff));
             state->cc.cy = (result > 0xff);
+            state->cc.ac = ((result & 0x0F) < (state->a & 0x0F));
             state->a = result & 0xff;
             state->pc += 1;
             }
-            //Note: auxiliary carry not implemented.
             break;
         case 0xcf:  //RST    1
             //Restart. CALL 0x0008
@@ -2437,10 +2437,10 @@ void Emulate8080Op(State8080* state, int fileoutputflag, FILE *output){
             state->cc.s = ((result & 0x80) != 0);
             state->cc.p = Parity((uint8_t) (result & 0xff));
             state->cc.cy = (result > 0xff);
+            state->cc.ac = ((result & 0x0F) < (state->a & 0x0F));
             state->a = result & 0xff;
             state->pc += 1;
             }
-            //Note: auxiliary carry not implemented.
             break;
         case 0xd7:  //RST    2
             //Restart. CALL 0x0010
@@ -2505,10 +2505,10 @@ void Emulate8080Op(State8080* state, int fileoutputflag, FILE *output){
             state->cc.s = ((result & 0x80) != 0);
             state->cc.p = Parity((uint8_t) (result & 0xff));
             state->cc.cy = (result > 0xff);
+            state->cc.ac = ((result & 0x0F) < (state->a & 0x0F));
             state->a = result & 0xff;
             state->pc += 1;
             }
-            //Note: auxiliary carry not implemented.
             break;
         case 0xdf:  //RST    3
             //Restart. CALL 0x0018
@@ -2800,9 +2800,9 @@ void Emulate8080Op(State8080* state, int fileoutputflag, FILE *output){
             state->cc.s = ((result & 0x80) != 0);
             state->cc.p = Parity((uint8_t) (result & 0xff));
             state->cc.cy = (result > 0xff);
+            state->cc.ac = ((result & 0x0F) < (state->a & 0x0F));
             state->pc += 1;
             }
-            //Note: auxiliary carry not implemented.
             break;
         case 0xff:  //RST    7
             //Restart. CALL 0x0038
