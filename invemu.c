@@ -60,6 +60,8 @@ int main(){
 
     //Allocate 64K. 8K is used for the ROM, 8K for the RAM (of which 7K is VRAM). Processor has an address width of 16 bits however, so 2^16 = 65536 possible addresses.
     state->memory = malloc(sizeof(uint8_t) * 0x10000);
+
+    //Load ROM file(s) into memory.
     RAMoffset = LoadFile(state->memory);
 
     int i = 0;
@@ -2901,43 +2903,61 @@ int Parity(uint8_t result){
 
 int LoadFile(uint8_t *memory){
     FILE *invaders;
-    long int bufsize;
+    long int filesize;
     unsigned char *buffer;
+    int filecount = 4;
+    int memOffset = 0;
 
-    //For processor diagnostics.
-    //invaders = fopen("Place Game ROM Here\\cpudiag.bin", "rb"); memory += 0x100; //Offset memory by 0x100, since that's where cpudiag starts. Instructions begin there, and the pc should also start there.
+    while (filecount > 0){
+        switch (filecount){
+            case 4:
+            //Open file in read binary mode. "r" by itself would be read text, which stops 0x1B from being read (it gets read as an EOF if the file is opened in text mode).
+            invaders = fopen("Place Game ROMs Here\\Invaders.h", "rb");
+            if (invaders == NULL){ printf("Error: Invaders.h file not found!");}
+            break;
+            case 3:
+            invaders = fopen("Place Game ROMs Here\\Invaders.g", "rb");
+            if (invaders == NULL){ printf("Error: Invaders.g file not found!");}
+            break;
+            case 2:
+            invaders = fopen("Place Game ROMs Here\\Invaders.f", "rb");
+            if (invaders == NULL){ printf("Error: Invaders.f file not found!");}
+            break;
+            case 1:
+            invaders = fopen("Place Game ROMs Here\\Invaders.e", "rb");
+            if (invaders == NULL){ printf("Error: Invaders.e file not found!");}
 
-    //Open file in read binary mode. "r" by itself would be read text, which stops 0x1B from being read (it gets read as an EOF if the file is opened in text mode).
-    invaders = fopen("Place Game ROM Here\\InvadersFull.h", "rb");
-    if (invaders == NULL){ printf("Error: File not found!");}
+            //For processor diagnostics.
+            //invaders = fopen("Processor diagnostics\\cpudiag\\cpudiag.bin", "rb"); memory += 0x100; //Offset memory by 0x100, since that's where cpudiag starts. Instructions begin there, and the pc should also start there.
+            break;
+        }
+        //Load the entire file into memory. Start by finding the end of the file.
+        if (fseek(invaders, 0L, SEEK_END) == 0){
+            //Get the current position (position at the end of the file). Remember it so that we know how much memory to allocate for storage.
+            filesize = ftell(invaders);
 
-    //Load the entire file into memory. Start by finding the end of the file.
-    if (fseek(invaders, 0L, SEEK_END) == 0){
-        //Get the current position (position at the end of the file). Remember it so that we know how much memory to allocate for storage.
-        bufsize = ftell(invaders);
+            //Error checking.
+            if (filesize == -1){ printf("Error: could not create buffer size!\n"); }
 
-        //Error checking.
-        if (bufsize == -1){ printf("Error: could not create buffer size!\n"); }
+            //Go back to the start of the file.
+            if (fseek(invaders, 0L, SEEK_SET) != 0){ printf("Error: could not set the file pointer to the start of the file!\n"); }
 
-        //Go back to the start of the file.
-        if (fseek(invaders, 0L, SEEK_SET) != 0){ printf("Error: could not set the file pointer to the start of the file!\n"); }
-
-        //Read the entire file into memory (into the buffer).
-        fread(memory, sizeof(uint8_t), bufsize, invaders);
-
+            //Read the entire file into memory (into the buffer).
+            fread(memory + memOffset, sizeof(uint8_t), filesize, invaders);
+            memOffset += filesize;
+        }
+        filecount--;
     }
 
     fclose(invaders);
 
-    return bufsize;
-
+    return memOffset;
 }
 
 void Disassemble8080OpToFile(unsigned char *codebuffer, int pc, FILE *output){
     unsigned char *code = &codebuffer[pc];
     int opbytes = 1;
     fprintf(output, "%04x 0x%02x ", pc, *code);
-    fprintf(output, "%04x ", pc);
     switch (*code)
     {
         case 0x00: fprintf(output, "NOP            "); break;
