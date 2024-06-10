@@ -2,49 +2,73 @@
 #include <stdlib.h>
 #include <math.h>
 #include <string.h>
+#include <stdint.h>
 
 int Disassemble8080OpToFile(unsigned char *, int pc, FILE *);
 
 int main(){
     FILE *invaders, *output;
-    long int bufsize;
+    long int filesize;
     unsigned char *buffer;
     int pc = 0;
-
-    //Open file in read binary mode. "r" by itself would be read text, which stops 0x1B from being read (it gets read as an EOF if the file is opened in text mode).
-    invaders = fopen("..\\..\\Place Game ROM Here\\InvadersFull.h", "rb");
-    if (invaders == NULL){printf("Error: File not found!"); return 1;}
+    int memOffset = 0;
+    int filecount = 0;
 
     //Found the base for this fantastic solution at: https://stackoverflow.com/questions/2029103/correct-way-to-read-a-text-file-into-a-buffer-in-c
 
-    //Load the entire file into memory. Start by finding the end of the file.
-    if (fseek(invaders, 0L, SEEK_END) == 0){
-        //Get the current position (position at the end of the file). Remember it so that we know how much memory to allocate for storage.
-        bufsize = ftell(invaders);
+    //Allocate 64K. 8K (8192) is used for the ROM, 8K for the RAM (of which 7K is VRAM). Processor has an address width of 16 bits however, so 2^16 = 65536 possible addresses.
+    buffer = malloc(sizeof(uint8_t) * 0x10000);
 
-        //Error checking.
-        if (bufsize == -1){printf("Error: could not create buffer size!\n");}
+    while (filecount < 4){
+        switch (filecount){
+            case 0:
+            //Open file in read binary mode. "r" by itself would be read text, which stops 0x1B from being read (it gets read as an EOF if the file is opened in text mode).
+            invaders = fopen("..\\..\\Place Game ROMs Here\\Invaders.h", "rb");
+            if (invaders == NULL){printf("Error: Invaders.h File not found!"); return 1;}
+            break;
+            case 1:
+            invaders = fopen("..\\..\\Place Game ROMs Here\\Invaders.g", "rb");
+            if (invaders == NULL){printf("Error: Invaders.g File not found!"); return 1;}
+            break;
+            case 2:
+            invaders = fopen("..\\..\\Place Game ROMs Here\\Invaders.f", "rb");
+            if (invaders == NULL){printf("Error: Invaders.e File not found!"); return 1;}
+            break;
+            case 3:
+            invaders = fopen("..\\..\\Place Game ROMs Here\\Invaders.e", "rb");
+            if (invaders == NULL){printf("Error: Invaders.f File not found!"); return 1;}
+            break;
+        }
+        //Load the entire file into memory. Start by finding the end of the file.
+        if (fseek(invaders, 0L, SEEK_END) == 0){
+            //Get the current position (position at the end of the file). Remember it so that we know how much memory to allocate for storage.
+            filesize = ftell(invaders);
 
-        //Allocate a buffer of the size of the file (a buffer to store each byte).
-        buffer = malloc(sizeof(char) * bufsize);
+            //Error checking.
+            if (filesize == -1){printf("Error: could not create buffer size!\n");}
 
-        //Go back to the start of the file.
-        if (fseek(invaders, 0L, SEEK_SET) != 0){printf("Error: could not set the file pointer to the start of the file!\n");}
-    
-        //Read the entire file into memory (into the buffer).
-        fread(buffer, sizeof(char), bufsize, invaders);
+            //Go back to the start of the file.
+            if (fseek(invaders, 0L, SEEK_SET) != 0){printf("Error: could not set the file pointer to the start of the file!\n");}
 
+            //Read the entire file into memory (into the buffer).
+            fread(buffer + memOffset, sizeof(char), filesize, invaders);
+
+            //Increase memory offset, so that the next file gets read into the correct position (first file at 0x0000, second at 0x0800, third at 0x1000, fourth at 0x1800).
+            memOffset += filesize;
+        }
+        filecount++;
     }
+
     printf("First bytes: %X, %X, %X, %X, %X, %X\n", *buffer, *(buffer + 1), *(buffer + 2), *(buffer + 3), *(buffer + 4), *(buffer + 5));
 
-    printf("bufsize = %d Last bytes: %X, %X, %X\n", bufsize, *(buffer + bufsize - 3), *(buffer + bufsize - 2), *(buffer + bufsize - 1));//*(buffer + bufsize - 1), *(buffer + bufsize));
+    printf("Last bytes: %X, %X, %X\n", *(buffer + memOffset - 3), *(buffer + memOffset - 2), *(buffer + memOffset - 1));
 
     fclose(invaders);
 
     //Create output file.
     output = fopen("output.txt", "w");
 
-    while (pc < bufsize){
+    while (pc < memOffset){
         pc += Disassemble8080OpToFile(buffer, pc, output);
     }
 
@@ -52,14 +76,6 @@ int main(){
 
     return 1;
 }
-
-
-   /*
-    *codebuffer is a valid pointer to 8080 assembly code
-    pc is the current offset into the code
-
-    returns the number of bytes of the op
-   */
 
 int Disassemble8080OpToFile(unsigned char *codebuffer, int pc, FILE *output)
 {

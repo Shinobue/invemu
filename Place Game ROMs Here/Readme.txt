@@ -1,0 +1,1 @@
+Place your game ROMs in this folder.

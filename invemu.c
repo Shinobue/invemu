@@ -2921,7 +2921,7 @@ int LoadFile(uint8_t *memory){
 
         //Go back to the start of the file.
         if (fseek(invaders, 0L, SEEK_SET) != 0){ printf("Error: could not set the file pointer to the start of the file!\n"); }
-    
+
         //Read the entire file into memory (into the buffer).
         fread(memory, sizeof(uint8_t), bufsize, invaders);
 
