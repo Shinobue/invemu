@@ -755,6 +755,19 @@ void Emulate8080Op(State8080* state, int fileoutputflag, FILE *output){
         case 0x27:  //DAA
             //Decimal Adjust Accumulator
             //Not used in space invaders
+            uint16_t result = state->a;
+            if (((result & 0x0F) > 9) || state->cc.ac){
+                result = result + 6; //Add 6 to the four rightmost bits.
+            }
+            if (((result >> 4) > 9) || state->cc.cy){
+                result = result + 96; //Add 6 to the four leftmost bits. Instead of shifting, just add 6 (0000 0110) shifted 4 bits to the left, which equals 96 (0110 0000).
+            }
+            state->cc.z = ((result & 0xff) == 0);
+            state->cc.s = ((result & 0x80) != 0);
+            state->cc.p = Parity((uint8_t) (result & 0xff));
+            state->cc.cy = (result > 0xff);
+            state->cc.ac = ((result & 0x0F) < (state->a & 0x0F));
+            state->a = result;
             break;
         case 0x28:  //NOP
             //No op
