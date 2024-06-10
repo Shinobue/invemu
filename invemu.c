@@ -2899,10 +2899,13 @@ int Parity(uint8_t result){
     return (count % 2 == 0);
 }
 
-int LoadFile(uint8_t *state){
+int LoadFile(uint8_t *memory){
     FILE *invaders;
     long int bufsize;
     unsigned char *buffer;
+
+    //For processor diagnostics.
+    //invaders = fopen("Place Game ROM Here\\cpudiag.bin", "rb"); memory += 0x100; //Offset memory by 0x100, since that's where cpudiag starts. Instructions begin there, and the pc should also start there.
 
     //Open file in read binary mode. "r" by itself would be read text, which stops 0x1B from being read (it gets read as an EOF if the file is opened in text mode).
     invaders = fopen("Place Game ROM Here\\InvadersFull.h", "rb");
@@ -2920,7 +2923,7 @@ int LoadFile(uint8_t *state){
         if (fseek(invaders, 0L, SEEK_SET) != 0){ printf("Error: could not set the file pointer to the start of the file!\n"); }
     
         //Read the entire file into memory (into the buffer).
-        fread(state, sizeof(uint8_t), bufsize, invaders);
+        fread(memory, sizeof(uint8_t), bufsize, invaders);
 
     }
 

@@ -21,4 +21,4 @@ Programming Guides/
 *output.txt
 
 #ignore cpudiag
-cpudiag.*
+cpudiag*
