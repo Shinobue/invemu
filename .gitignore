@@ -6,7 +6,7 @@
 
 #ignore space invaders .zip as well as contents
 invaders.zip
-*.[efgh]
+invaders*.[efgh]
 
 #ignore my bat file
 *.bat
