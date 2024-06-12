@@ -6,7 +6,7 @@
 
 #ignore space invaders .zip as well as contents
 invaders.zip
-invaders*.[efgh]
+Place Game ROMs Here/invaders*.[efgh]
 
 #ignore my bat file
 *.bat

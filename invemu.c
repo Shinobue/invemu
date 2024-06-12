@@ -4,12 +4,14 @@
 #include <string.h>
 #include <stdint.h>
 #include "8080Emulator.h"
+#include "InvadersMachine.h"
 
 int main(){
 
     int RAMoffset;
     int fileoutputflag = 1;
     FILE *output;
+    int i = 0;
 
     //Init State8080 and program counter.
     State8080 mystate;
@@ -26,7 +28,6 @@ int main(){
     //Load ROM file(s) into memory.
     RAMoffset = LoadFile(state->memory);
 
-    int i = 0;
     while (i < 32){
         printf("%02x ", state->memory[i]);
         i += 1;
@@ -39,13 +40,28 @@ int main(){
     //Create output file if applicable.
     if (fileoutputflag){
         output = fopen("output.txt", "w");
-        fprintf(output, " Ins#   pc   op  mnem byte(s)\n"); //Also print to file if flag enabled.
+        fprintf(output, " Ins#   pc   op  mnem   byte(s)\n"); //Also print to file if flag enabled.
     }
     while (i < 1000){
         //Print instruction count.
         printf("%6d ", i);
         if (fileoutputflag){fprintf(output, "%6d ", i);} //Also print to file.
-        Emulate8080Op(state, fileoutputflag, output);
+
+        uint8_t *opcode = &state->memory[state->pc];
+
+        if (*opcode == 0xdb){ //Machine-specific handling for IN.
+            uint8_t port = opcode[1];
+            state->a = MachineIN(state, port);
+            state->pc++;
+        }
+        else if (*opcode == 0xd3){ //OUT.
+            uint8_t port = opcode[1];
+            MachineOUT(state, port);
+            state->pc++;
+        }
+        else{
+            Emulate8080Op(state, fileoutputflag, output);
+        }
         i += 1;
     }
 
