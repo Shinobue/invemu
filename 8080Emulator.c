@@ -4,6 +4,7 @@
 #include <string.h>
 #include <stdint.h>
 #include "8080Emulator.h"
+#include "InvadersMachine.h"
 
 void UnimplementedInstruction(State8080* state){
     printf("Error: Unimplemented instruction");
@@ -2336,7 +2337,11 @@ void Emulate8080Op(State8080* state, int fileoutputflag, FILE *output){
             break;
         case 0xd3:  //OUT    D8
             //Output
+            {
+            uint8_t port = opcode[1];
+            MachineOUT(state, port);
             state->pc++;
+            }
             break;
         case 0xd4:  //CNC    D16
             //Condition call (no carry)
@@ -2403,7 +2408,11 @@ void Emulate8080Op(State8080* state, int fileoutputflag, FILE *output){
             break;
         case 0xdb:  //IN     D8
             //Input
+            {
+            uint8_t port = opcode[1];
+            state->a = MachineIN(state, port);
             state->pc++;
+            }
             break;
         case 0xdc:  //CC     D16
             //Condition call (carry)
