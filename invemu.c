@@ -7,12 +7,16 @@
 #include "InvadersMachine.h"
 #include "SDL.h"
 
-int main(int argc, char *argv[]){
+const int fileoutputflag = 1;
+const int printflag = 0;
 
+int main(int argc, char *argv[]){
     int RAMoffset;
-    int fileoutputflag = 1;
     FILE *output;
     int i = 0;
+
+    //Init SDL.
+    SDL_Init(SDL_INIT_EVERYTHING);
 
     //Init State8080 and program counter.
     State8080 mystate;
@@ -29,6 +33,10 @@ int main(int argc, char *argv[]){
     //Load ROM file(s) into memory.
     RAMoffset = LoadFile(state->memory);
 
+    //Create window
+    SDL_Window *window = SDL_CreateWindow("Space Invaders", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 512, 512, SDL_WINDOW_SHOWN);
+
+    //Temporary, print info to cmd.
     while (i < 32){
         printf("%02x ", state->memory[i]);
         i += 1;
@@ -36,30 +44,39 @@ int main(int argc, char *argv[]){
     printf("\nRAMoffset = %d\n\n\n", RAMoffset);
 
     i = 0;
-    printf(" Ins#   pc   op  mnem   byte(s)\n");
+
+    if (printflag){printf(" Ins#   pc   op  mnem   byte(s)\n");}
 
     //Create output file if applicable.
     if (fileoutputflag){
         output = fopen("output.txt", "w");
         fprintf(output, " Ins#   pc   op  mnem   byte(s)\n"); //Also print to file if flag enabled.
     }
-    while (i < 60000){
+    while (i < 50000){
         //Print instruction count.
-        printf("%6d ", i);
+        if (printflag){printf("%6d ", i);}
         if (fileoutputflag){fprintf(output, "%6d ", i);} //Also print to file.
 
-        Emulate8080Op(state, fileoutputflag, output);
+        //Emulate instruction
+        Emulate8080Op(state, output);
+        if (i == 49999)
+            Render(state, window);
         i += 1;
     }
+    SDL_Delay(10000);
 
     //Print VRAM values
     i = 0x2400;
     while (i < 0x4000){
         if (state->memory[i] != 0)
-            printf("%X: %X\n", i, state->memory[i]);
+            printf("x %d, y %d: %X\n", (i - 0x2400) / 32, (i - 0x2400) % 32, state->memory[i]);
         i++;
     }
 
+    //Clear memory.
     free(state->memory);
 
+    //Destroy SDL stuff.
+    SDL_DestroyWindow(window);
+    SDL_Quit();
 }

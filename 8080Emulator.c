@@ -6,6 +6,9 @@
 #include "8080Emulator.h"
 #include "InvadersMachine.h"
 
+extern const int fileoutputflag;
+extern const int printflag;
+
 void UnimplementedInstruction(State8080* state){
     printf("Error: Unimplemented instruction");
 }
@@ -279,11 +282,13 @@ void Disassemble8080Op(unsigned char *codebuffer, int pc){
     }
 }
 
-void Emulate8080Op(State8080* state, int fileoutputflag, FILE *output){
+void Emulate8080Op(State8080* state, FILE *output){
     unsigned char *opcode = &state->memory[state->pc];
 
     //Prints location of current instruction (current value of pc), as well as its opcode and mnemonic. Also prints the byte(s) that follow the instruction, if applicable.
-    Disassemble8080Op(state->memory, state->pc);
+    if (printflag){
+        Disassemble8080Op(state->memory, state->pc);
+    }
 
     //If file output is enabled, print to file.
     if (fileoutputflag){
@@ -2746,16 +2751,17 @@ void Emulate8080Op(State8080* state, int fileoutputflag, FILE *output){
             break;
     }
 
+    if (printflag){
     //Print processor state.
-    printf("\t");
-    printf("%c", state->cc.z ? 'z' : '.');
-    printf("%c", state->cc.s ? 's' : '.');
-    printf("%c", state->cc.p ? 'p' : '.');
-    printf("%c", state->cc.cy ? 'c' : '.');
-    printf("%c", state->cc.ac ? 'a' : '.');
-    printf(" A %02X B %02X C %02X D %02X E %02X H %02X L %02X SP %04X", state->a, state->b, state->c, state->d, state->e, state->h, state->l, state->sp);
-
-    printf("\n");
+        printf("\t");
+        printf("%c", state->cc.z ? 'z' : '.');
+        printf("%c", state->cc.s ? 's' : '.');
+        printf("%c", state->cc.p ? 'p' : '.');
+        printf("%c", state->cc.cy ? 'c' : '.');
+        printf("%c", state->cc.ac ? 'a' : '.');
+        printf(" A %02X B %02X C %02X D %02X E %02X H %02X L %02X SP %04X", state->a, state->b, state->c, state->d, state->e, state->h, state->l, state->sp);
+        printf("\n");
+    }
 
     if (fileoutputflag){
         fprintf(output, "\t");

@@ -33,7 +33,7 @@ typedef struct State8080 {
 int LoadFile(uint8_t *);
 void UnimplementedInstruction(State8080*);
 void Disassemble8080Op(unsigned char *, int);
-void Emulate8080Op(State8080*, int, FILE *);
+void Emulate8080Op(State8080*, FILE *);
 void Jump(State8080*, unsigned char *);
 void Call(State8080*, unsigned char *);
 void Restart(State8080*, uint16_t);
