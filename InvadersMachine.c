@@ -42,7 +42,9 @@ void Render(State8080 *state, SDL_Window *window){
     int byte = 0;
     Uint32 pixels[0x1c00 * 8]; //8 pixels in each byte.
 
-    while (i < (vRamSize * 8)){
+    //Convert each byte into a stream of 8 pixels per byte. Space invaders is 1 bit per pixel, but modern GPUs (as of writing, 2024) need 4 bytes per pixel.
+    while (byte < vRamSize){
+        //Render starting from the least significant bit. Output white if bit is 1, 0 if black. Loop through all 8 bits in each byte.
         if ((state->memory[memOffset + byte] << (7 - (i % 8))) & 0x80){
             pixels[i] = 0xFFFFFFFF; //White
         }
@@ -50,19 +52,26 @@ void Render(State8080 *state, SDL_Window *window){
             pixels[i] = 0x00000000; //Black
         }
         i++;
+        //Increment byte when final bit is processed.
         if (i % 8 == 0){
             byte++;
         }
     }
 
     SDL_Renderer *renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
-    SDL_Texture *Game = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_STREAMING, 256, 256); //Use Stream for real emulation.
+    SDL_Texture *Game = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_STREAMING, 256, 224); //Use Stream for real emulation.
+
+    //Clear screen
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+    SDL_SetRenderTarget(renderer, NULL);
+    SDL_RenderClear(renderer);
+    SDL_RenderPresent(renderer);
 
     SDL_Rect screen;
     screen.x = 0;
     screen.y = 0;
-    screen.w = 256;
-    screen.h = 224;
+    screen.w = 512;
+    screen.h = 448;
 
     SDL_SetRenderTarget(renderer, Game);
     SDL_UpdateTexture(Game, &screen, pixels, 1024);
@@ -71,4 +80,5 @@ void Render(State8080 *state, SDL_Window *window){
     SDL_RenderPresent(renderer);
 
     SDL_DestroyTexture(Game);
+    SDL_DestroyRenderer(renderer);
 }

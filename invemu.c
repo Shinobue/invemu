@@ -5,9 +5,9 @@
 #include <stdint.h>
 #include "8080Emulator.h"
 #include "InvadersMachine.h"
-#include "SDL.h"
+#include <SDL.h>
 
-const int fileoutputflag = 1;
+const int fileoutputflag = 0;
 const int printflag = 0;
 
 int main(int argc, char *argv[]){
@@ -59,8 +59,9 @@ int main(int argc, char *argv[]){
 
         //Emulate instruction
         Emulate8080Op(state, output);
-        if (i == 49999)
+        if (i == 49999){
             Render(state, window);
+        }
         i += 1;
     }
     SDL_Delay(10000);
