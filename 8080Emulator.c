@@ -2783,12 +2783,13 @@ void Jump(State8080* state, unsigned char *opcode){
 }
 
 void Call(State8080* state, unsigned char *opcode){
-    //Store the address of the next instruction (which is state->pc + 2) on the stack pointer (remember the stack "grows downward").
+    //Store the address of the next instruction on the stack pointer (remember the stack "grows downward").
+    //The reason we store pc + 2 (which at this point in time is actually the second address byte of the CALL instruction, i.e 1 step BEFORE the address of the next instruction after return) is the fact that the pc will increment by 1 after RET (like any other instruction), meaning that in practice it will actually start there.
     state->memory[state->sp - 1] = (state->pc + 2) >> 8;
     state->memory[state->sp - 2] = (state->pc + 2) & 0xff;
     state->sp -= 2;
     state->pc = (opcode[2] << 8) | opcode[1];
-    state->pc--;
+    state->pc--; //Decrement pc, since the pc will get incremented after this function ends. Not decrementing would mean that the program starts at the CALLed address + 1.
 }
 
 void Restart(State8080* state, uint16_t newaddr){

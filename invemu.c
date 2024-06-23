@@ -3,6 +3,7 @@
 #include <math.h>
 #include <string.h>
 #include <stdint.h>
+#include <time.h>
 #include "8080Emulator.h"
 #include "InvadersMachine.h"
 #include <SDL.h>
@@ -14,6 +15,8 @@ int main(int argc, char *argv[]){
     int RAMoffset;
     FILE *output;
     int i = 0;
+    clock_t start, stop;
+    start = clock(); //Start counting clock ticks.
 
     //Init SDL.
     SDL_Init(SDL_INIT_EVERYTHING);
@@ -62,17 +65,32 @@ int main(int argc, char *argv[]){
         if (i == 49999){
             Render(state, window);
         }
+
+        stop = clock(); //Check the current clock tick count. This divided by CLOCKS_PER_SEC is the amount of clock ticks elapsed.
+        printf("start: %ld, stop: %ld, stop - start = %ld, clocks/sec = %f\n", start, stop, stop - start, (float) (stop - start) / CLOCKS_PER_SEC);
+
+        //Refresh the screen every 1/60th of a second (~0.017s).
+        if (((float) (stop - start) / CLOCKS_PER_SEC) > 1.0/60.0){ //Compare the current clock tick count (stop) with the amount of ticks since the last refresh (which was at "start", so stop - start). (stop - start) divided by CLOCKS_PER_SEC equals time elapsed since last refresh.
+            if (state->int_enable){
+                //Restart(state, 8 * 2); //Interrupt 2. Equivalent to RST 2.
+                //state->pc++; //Increment pc like any other instruction.
+
+                printf("start = %d, stop - start = %f, stop = %d\n", start, (float) (stop - start) / CLOCKS_PER_SEC, stop);
+                start = clock(); //Restart tick counter.
+            }
+        }
+
         i += 1;
     }
     SDL_Delay(10000);
 
     //Print VRAM values
-    i = 0x2400;
-    while (i < 0x4000){
-        if (state->memory[i] != 0)
-            printf("x %d, y %d: %X\n", (i - 0x2400) / 32, (i - 0x2400) % 32, state->memory[i]);
-        i++;
-    }
+//    i = 0x2400;
+//    while (i < 0x4000){
+//        if (state->memory[i] != 0)
+//            printf("x %d, y %d: %X\n", (i - 0x2400) / 32, (i - 0x2400) % 32, state->memory[i]);
+//        i++;
+//    }
 
     //Clear memory.
     free(state->memory);
