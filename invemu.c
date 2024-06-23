@@ -37,7 +37,7 @@ int main(int argc, char *argv[]){
     RAMoffset = LoadFile(state->memory);
 
     //Create window
-    SDL_Window *window = SDL_CreateWindow("Space Invaders", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 512, 512, SDL_WINDOW_SHOWN);
+    SDL_Window *window = SDL_CreateWindow("Space Invaders", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1024, 1024, SDL_WINDOW_SHOWN);
 
     //Temporary, print info to cmd.
     while (i < 32){
@@ -55,19 +55,21 @@ int main(int argc, char *argv[]){
         output = fopen("output.txt", "w");
         fprintf(output, " Ins#   pc   op  mnem   byte(s)\n"); //Also print to file if flag enabled.
     }
-    while (i < 50000){
+    while (i < 500000){
         //Print instruction count.
         if (printflag){printf("%6d ", i);}
         if (fileoutputflag){fprintf(output, "%6d ", i);} //Also print to file.
 
         //Emulate instruction
         Emulate8080Op(state, output);
+
+        //Render once
         if (i == 49999){
             Render(state, window);
         }
 
         stop = clock(); //Check the current clock tick count. This divided by CLOCKS_PER_SEC is the amount of clock ticks elapsed.
-        printf("start: %ld, stop: %ld, stop - start = %ld, clocks/sec = %f\n", start, stop, stop - start, (float) (stop - start) / CLOCKS_PER_SEC);
+        //printf("start: %ld, stop: %ld, stop - start = %ld, clocks/sec = %f\n", start, stop, stop - start, (float) (stop - start) / CLOCKS_PER_SEC);
 
         //Refresh the screen every 1/60th of a second (~0.017s).
         if (((float) (stop - start) / CLOCKS_PER_SEC) > 1.0/60.0){ //Compare the current clock tick count (stop) with the amount of ticks since the last refresh (which was at "start", so stop - start). (stop - start) divided by CLOCKS_PER_SEC equals time elapsed since last refresh.
@@ -75,6 +77,7 @@ int main(int argc, char *argv[]){
                 //Restart(state, 8 * 2); //Interrupt 2. Equivalent to RST 2.
                 //state->pc++; //Increment pc like any other instruction.
 
+                Render(state, window);
                 printf("start = %d, stop - start = %f, stop = %d\n", start, (float) (stop - start) / CLOCKS_PER_SEC, stop);
                 start = clock(); //Restart tick counter.
             }
