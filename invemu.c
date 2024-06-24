@@ -37,7 +37,7 @@ int main(int argc, char *argv[]){
     RAMoffset = LoadFile(state->memory);
 
     //Create window
-    SDL_Window *window = SDL_CreateWindow("Space Invaders", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1024, 1024, SDL_WINDOW_SHOWN);
+    SDL_Window *window = SDL_CreateWindow("Space Invaders", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 896, 1024, SDL_WINDOW_SHOWN);
 
     //Temporary, print info to cmd.
     while (i < 32){

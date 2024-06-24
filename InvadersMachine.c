@@ -92,12 +92,12 @@ void Render(State8080 *state, SDL_Window *window){
     SDL_Rect screen;
     screen.x = 0;
     screen.y = 0;
-    screen.w = 512;
-    screen.h = 448;
+    screen.w = 512*2;
+    screen.h = 448*2;
 
     SDL_Point corner;
     corner.x = 512;
-    corner.y = 100;
+    corner.y = 512;
 
     SDL_SetRenderTarget(renderer, Game);
     SDL_UpdateTexture(Game, &screen, pixels, 1024);
