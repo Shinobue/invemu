@@ -43,26 +43,26 @@ void Render(State8080 *state, SDL_Window *window){
     Uint32 pixels[0x1c00 * 8]; //8 pixels in each byte.
 
     //Draw white border around screen. For testing only. Comment out when not in use.
-        while (i < 224){
-            state->memory[memOffset + i * 32] = 0x1;
-            i++;
-        }
-        i = 0;
-        while (i < 224){
-            state->memory[memOffset + i * 32 + 31] = 0x80;
-            i++;
-        }
-        i = 0;
-        while (i < 32){
-            state->memory[memOffset + i] = 0xFF;
-            i++;
-        }
-        i = 0;
-        while (i < 32){
-            state->memory[memOffset + 32 * 223 + i] = 0xFF;
-            i++;
-        }
-        i = 0;
+//        while (i < 224){
+//            state->memory[memOffset + i * 32] = 0x1;
+//            i++;
+//        }
+//        i = 0;
+//        while (i < 224){
+//            state->memory[memOffset + i * 32 + 31] = 0x80;
+//            i++;
+//        }
+//        i = 0;
+//        while (i < 32){
+//            state->memory[memOffset + i] = 0xFF;
+//            i++;
+//        }
+//        i = 0;
+//        while (i < 32){
+//            state->memory[memOffset + 32 * 223 + i] = 0xFF;
+//            i++;
+//        }
+//        i = 0;
 
     //Convert each byte into a stream of 8 pixels per byte. Space invaders is 1 bit per pixel, but modern GPUs (as of writing, 2024) need 4 bytes per pixel.
     while (byte < vRamSize){
@@ -84,10 +84,10 @@ void Render(State8080 *state, SDL_Window *window){
     SDL_Texture *Game = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_STREAMING, 256, 224); //Use Stream for real emulation.
 
     //Clear screen
-    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
-    SDL_SetRenderTarget(renderer, NULL);
-    SDL_RenderClear(renderer);
-    SDL_RenderPresent(renderer);
+    //SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+    //SDL_SetRenderTarget(renderer, NULL);
+    //SDL_RenderClear(renderer);
+    //SDL_RenderPresent(renderer);
 
     SDL_Rect screen;
     screen.x = 0;

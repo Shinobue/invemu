@@ -8,6 +8,7 @@
 
 extern const int fileoutputflag;
 extern const int printflag;
+extern const int cpmflag;
 
 void UnimplementedInstruction(State8080* state){
     printf("Error: Unimplemented instruction");
@@ -2785,29 +2786,29 @@ void Jump(State8080* state, unsigned char *opcode){
 void Call(State8080* state, unsigned char *opcode){
     //Store the address of the next instruction on the stack pointer (remember the stack "grows downward").
     //The reason we store pc + 2 (which at this point in time is actually the second address byte of the CALL instruction, i.e 1 step BEFORE the address of the next instruction after return) is the fact that the pc will increment by 1 after RET (like any other instruction), meaning that in practice it will actually start there.
-    state->memory[state->sp - 1] = (state->pc + 2) >> 8;
-    state->memory[state->sp - 2] = (state->pc + 2) & 0xff;
+    state->memory[state->sp - 1 & 0xFFFF] = (state->pc + 2) >> 8; //The & 0xFFFF is for the event that sp is 0 or 1. Due to what I THINK is type promotion, state->sp - 1 becomes 0xFFFFFFFF instead of 0xFFFF.
+    state->memory[state->sp - 2 & 0xFFFF] = (state->pc + 2) & 0xff;
     state->sp -= 2;
     state->pc = (opcode[2] << 8) | opcode[1];
     state->pc--; //Decrement pc, since the pc will get incremented after this function ends. Not decrementing would mean that the program starts at the CALLed address + 1.
 }
 
 void Restart(State8080* state, uint16_t newaddr){
-    state->memory[state->sp - 1] = ((state->pc + 1) >> 8) & 0xff;
-    state->memory[state->sp - 2] = (state->pc + 1) & 0xff;
+    state->memory[state->sp - 1 & 0xFFFF] = ((state->pc + 1) >> 8) & 0xff;
+    state->memory[state->sp - 2 & 0xFFFF] = (state->pc + 1) & 0xff;
     state->sp -= 2;
     state->pc = newaddr;
 }
 
 void Pop(State8080* state, uint8_t *high, uint8_t *low){
     *low = state->memory[state->sp];
-    *high = state->memory[state->sp + 1];
+    *high = state->memory[state->sp + 1 & 0xFFFF];
     state->sp += 2;
 }
 
 void Push(State8080* state, uint8_t *high, uint8_t *low){
-    state->memory[state->sp - 1] = *high;
-    state->memory[state->sp - 2] = *low;
+    state->memory[state->sp - 1 & 0xFFFF] = *high;
+    state->memory[state->sp - 2 & 0xFFFF] = *low;
     state->sp -= 2;
 }
 
@@ -2837,27 +2838,50 @@ int LoadFile(uint8_t *memory){
     int memOffset = 0;
 
     while (filecount > 0){
-        switch (filecount){
-            case 4:
-            //Open file in read binary mode. "r" by itself would be read text, which stops 0x1B from being read (it gets read as an EOF if the file is opened in text mode).
-            invaders = fopen("Place Game ROMs Here\\Invaders.h", "rb");
-            if (invaders == NULL){ printf("Error: Invaders.h file not found!");}
-            break;
-            case 3:
-            invaders = fopen("Place Game ROMs Here\\Invaders.g", "rb");
-            if (invaders == NULL){ printf("Error: Invaders.g file not found!");}
-            break;
-            case 2:
-            invaders = fopen("Place Game ROMs Here\\Invaders.f", "rb");
-            if (invaders == NULL){ printf("Error: Invaders.f file not found!");}
-            break;
-            case 1:
-            invaders = fopen("Place Game ROMs Here\\Invaders.e", "rb");
-            if (invaders == NULL){ printf("Error: Invaders.e file not found!");}
+        //Processor diagnostics.
+        if (cpmflag == 1){
 
-            //For processor diagnostics.
+            //cpudiag
             //invaders = fopen("Processor diagnostics\\cpudiag\\cpudiag.bin", "rb"); memory += 0x100; //Offset memory by 0x100, since that's where cpudiag starts. Instructions begin there, and the pc should also start there.
-            break;
+
+            //8080EXER
+            //invaders = fopen("Processor diagnostics\\8080EXER\\8080EXER.bin", "rb"); memory += 0x100;
+
+            //8080EXM
+            //invaders = fopen("Processor diagnostics\\8080EXM\\8080EXM.bin", "rb"); memory += 0x100;
+
+            //8080PRE
+            //invaders = fopen("Processor diagnostics\\8080PRE\\8080PRE.bin", "rb"); memory += 0x100;
+
+            //CPUTEST
+            //invaders = fopen("Processor diagnostics\\CPUTEST\\CPUTEST.bin", "rb"); memory += 0x100;
+
+            //TST8080
+            invaders = fopen("Processor diagnostics\\TST8080\\TST8080.bin", "rb"); memory += 0x100;
+
+            filecount = 1;
+        }
+        //Space invaders.
+        else{
+            switch (filecount){
+                case 4:
+                //Open file in read binary mode. "r" by itself would be read text, which stops 0x1B from being read (it gets read as an EOF if the file is opened in text mode).
+                invaders = fopen("Place Game ROMs Here\\Invaders.h", "rb");
+                if (invaders == NULL){ printf("Error: Invaders.h file not found!");}
+                break;
+                case 3:
+                invaders = fopen("Place Game ROMs Here\\Invaders.g", "rb");
+                if (invaders == NULL){ printf("Error: Invaders.g file not found!");}
+                break;
+                case 2:
+                invaders = fopen("Place Game ROMs Here\\Invaders.f", "rb");
+                if (invaders == NULL){ printf("Error: Invaders.f file not found!");}
+                break;
+                case 1:
+                invaders = fopen("Place Game ROMs Here\\Invaders.e", "rb");
+                if (invaders == NULL){ printf("Error: Invaders.e file not found!");}
+                break;
+            }
         }
         //Load the entire file into memory. Start by finding the end of the file.
         if (fseek(invaders, 0L, SEEK_END) == 0){

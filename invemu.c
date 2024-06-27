@@ -10,6 +10,7 @@
 
 const int fileoutputflag = 0;
 const int printflag = 0;
+const int cpmflag = 0;
 
 int main(int argc, char *argv[]){
     int RAMoffset;
@@ -26,12 +27,15 @@ int main(int argc, char *argv[]){
     State8080 *state = &mystate;
 
     state->pc = 0;
+    if (cpmflag == 1) state->pc = 0x100; //For CP/M cpu diagnostics.
 
     //Set all registers and condition codes to 0.
     state->cc.z = state->cc.s = state->cc.p = state->cc.cy = state->cc.ac = state->a = state->b = state->c = state->d = state->e = state->h = state->l = state->sp = 0;
 
     //Allocate 64K. 8K is used for the ROM, 8K for the RAM (of which 7K is VRAM). Processor has an address width of 16 bits however, so 2^16 = 65536 possible addresses.
     state->memory = malloc(sizeof(uint8_t) * 0x10000);
+
+    if (cpmflag) state->memory[0x05] = 0xC9; //Return after OS call (CP/M diagnostics only).
 
     //Load ROM file(s) into memory.
     RAMoffset = LoadFile(state->memory);
@@ -56,6 +60,21 @@ int main(int argc, char *argv[]){
         fprintf(output, " Ins#   pc   op  mnem   byte(s)\n"); //Also print to file if flag enabled.
     }
     while (i < 500000){
+        //CPU Diagnostics
+        if (cpmflag && state->pc == 5){
+            int z = 0;
+            if (state->c == 2){
+                printf("%c\n", state->e);
+            }
+            else if (state->c == 9){
+                while ((state->memory[((state->d << 8) | state->e) + z] != 0x24)){
+                    printf("%c", state->memory[((state->d << 8) | state->e) + z], state->memory[((state->d << 8) | state->e) + z]);
+                    z++;
+                }
+                printf("\n");
+            }
+        }
+
         //Print instruction count.
         if (printflag){printf("%6d ", i);}
         if (fileoutputflag){fprintf(output, "%6d ", i);} //Also print to file.
@@ -63,29 +82,27 @@ int main(int argc, char *argv[]){
         //Emulate instruction
         Emulate8080Op(state, output);
 
-        //Render once
-        if (i == 49999){
-            Render(state, window);
-        }
-
         stop = clock(); //Check the current clock tick count. This divided by CLOCKS_PER_SEC is the amount of clock ticks elapsed.
         //printf("start: %ld, stop: %ld, stop - start = %ld, clocks/sec = %f\n", start, stop, stop - start, (float) (stop - start) / CLOCKS_PER_SEC);
 
         //Refresh the screen every 1/60th of a second (~0.017s).
         if (((float) (stop - start) / CLOCKS_PER_SEC) > 1.0/60.0){ //Compare the current clock tick count (stop) with the amount of ticks since the last refresh (which was at "start", so stop - start). (stop - start) divided by CLOCKS_PER_SEC equals time elapsed since last refresh.
             if (state->int_enable){
-                //Restart(state, 8 * 2); //Interrupt 2. Equivalent to RST 2.
-                //state->pc++; //Increment pc like any other instruction.
+                Restart(state, 8 * 1); //Interrupt 1. Equivalent to RST 1 (middle of screen).
+                state->pc++;
+                //Render(state, window); //Render top half (implement later).
 
+                Restart(state, 8 * 2); //Interrupt 2. Equivalent to RST 2 (bottom of screen).
+                state->pc++; //Increment pc like any other instruction.
                 Render(state, window);
-                printf("start = %d, stop - start = %f, stop = %d\n", start, (float) (stop - start) / CLOCKS_PER_SEC, stop);
+                //printf("start = %d, stop - start = %f, stop = %d\n", start, (float) (stop - start) / CLOCKS_PER_SEC, stop);
                 start = clock(); //Restart tick counter.
             }
         }
 
-        i += 1;
+        i++;
     }
-    SDL_Delay(10000);
+    Render(state, window);
 
     //Print VRAM values
 //    i = 0x2400;
