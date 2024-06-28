@@ -36,6 +36,7 @@ void Disassemble8080Op(unsigned char *, int);
 void Emulate8080Op(State8080*, FILE *);
 void Jump(State8080*, unsigned char *);
 void Call(State8080*, unsigned char *);
+void Return(State8080*);
 void Restart(State8080*, uint16_t);
 void Pop(State8080*, uint8_t *, uint8_t *);
 void Push(State8080*, uint8_t *, uint8_t *);

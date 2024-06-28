@@ -2190,9 +2190,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             //(PCH) <- ((SP) + 1)
             //(SP) <- (SP) + 2
             if (state->cc.z == 0){
-                //SP contains a memory address. The contents of this address + 1 are put into the high order bits, and the contents of the address itself (i.e without the +1) are the low order bits.
-                state->pc = (state->memory[state->sp + 1] << 8) | state->memory[state->sp];
-                state->sp += 2;
+                Return(state);
             }
             break;
         case 0xc1:  //POP    B
@@ -2255,8 +2253,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             //Conditional Return
             //If Z, RET:
             if (state->cc.z == 1){
-                state->pc = (state->memory[state->sp + 1] << 8) | state->memory[state->sp];
-                state->sp += 2;
+                Return(state);
             }
             break;
         case 0xc9:  //RET
@@ -2264,8 +2261,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             //(PCL) <- ((SP))
             //(PCH) <- ((SP) + 1)
             //(SP) <- (SP) + 2
-            state->pc = (state->memory[state->sp + 1] << 8) | state->memory[state->sp];
-            state->sp += 2;
+            Return(state);
             break;
         case 0xca:  //JZ    D16
             //Conditional jump (zero)
@@ -2321,8 +2317,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             //Conditional Return
             //If NCY, RET:
             if (state->cc.cy == 0){
-                state->pc = (state->memory[state->sp + 1] << 8) | state->memory[state->sp];
-                state->sp += 2;
+                Return(state);
             }
             break;
         case 0xd1:  //POP    D
@@ -2391,8 +2386,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             //(PCH) <- ((SP) + 1)
             //(SP) <- (SP) + 2
             if (state->cc.cy == 1){
-                state->pc = (state->memory[state->sp + 1] << 8) | state->memory[state->sp];
-                state->sp += 2;
+                Return(state);
             }
             break;
         case 0xd9:  //RET
@@ -2400,8 +2394,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             //(PCL) <- ((SP))
             //(PCH) <- ((SP) + 1)
             //(SP) <- (SP) + 2
-            state->pc = (state->memory[state->sp + 1] << 8) | state->memory[state->sp];
-            state->sp += 2;
+            Return(state);
             break;
         case 0xda:  //JC    D16
             //Conditional jump (carry)
@@ -2460,8 +2453,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             //Conditional Return
             //If Parity is odd, RET:
             if (state->cc.p == 0){
-                state->pc = (state->memory[state->sp + 1] << 8) | state->memory[state->sp];
-                state->sp += 2;
+                Return(state);
             }
             break;
         case 0xe1:  //POP    H
@@ -2490,8 +2482,8 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->l = state->memory[state->sp];
             state->memory[state->sp] = temp;
             temp = state->h;
-            state->h = state->memory[state->sp + 1];
-            state->memory[state->sp + 1] = temp;
+            state->h = state->memory[state->sp + 1 & 0xFFFF];
+            state->memory[state->sp + 1 & 0xFFFF] = temp;
             }
             break;
         case 0xe4:  //CPO    D16
@@ -2533,8 +2525,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             //Conditional Return
             //If Parity is even, RET:
             if (state->cc.p == 1){
-                state->pc = (state->memory[state->sp + 1] << 8) | state->memory[state->sp];
-                state->sp += 2;
+                Return(state);
             }
             break;
         case 0xe9:  //PCHL
@@ -2605,8 +2596,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             //Conditional Return
             //If sign flag is 0 (i.e result was a positive integer), RET:
             if (state->cc.s == 0){
-                state->pc = (state->memory[state->sp + 1] << 8) | state->memory[state->sp];
-                state->sp += 2;
+                Return(state);
             }
             break;
         case 0xf1:  //POP    PSW
@@ -2623,7 +2613,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->cc.ac = (state->memory[state->sp] >> 4) & 0x1;
             state->cc.z = (state->memory[state->sp] >> 6) & 0x1;
             state->cc.s = (state->memory[state->sp] >> 7) & 0x1;
-            state->a = state->memory[state->sp + 1];
+            state->a = state->memory[state->sp + 1 & 0xFFFF];
             state->sp += 2;
             break;
         case 0xf2:  //JP     D16
@@ -2659,15 +2649,15 @@ void Emulate8080Op(State8080* state, FILE *output){
             //((SP) - 2)6 <- (Z)
             //((SP) - 2)7 <- (S)
             //(SP) <- (SP) - 2
-            state->memory[state->sp - 1] = state->a;
-            state->memory[state->sp - 2] = state->cc.s & 0x01;
-            state->memory[state->sp - 2] = (state->memory[state->sp - 2] << 1) | state->cc.z;
-            state->memory[state->sp - 2] = (state->memory[state->sp - 2] << 1) | 0x0;
-            state->memory[state->sp - 2] = (state->memory[state->sp - 2] << 1) | state->cc.ac;
-            state->memory[state->sp - 2] = (state->memory[state->sp - 2] << 1) | 0x0;
-            state->memory[state->sp - 2] = (state->memory[state->sp - 2] << 1) | state->cc.p;
-            state->memory[state->sp - 2] = (state->memory[state->sp - 2] << 1) | 0x01;
-            state->memory[state->sp - 2] = (state->memory[state->sp - 2] << 1) | state->cc.cy;
+            state->memory[state->sp - 1 & 0xFFFF] = state->a;
+            state->memory[state->sp - 2 & 0xFFFF] = state->cc.s & 0x01;
+            state->memory[state->sp - 2 & 0xFFFF] = (state->memory[state->sp - 2 & 0xFFFF] << 1) | state->cc.z;
+            state->memory[state->sp - 2 & 0xFFFF] = (state->memory[state->sp - 2 & 0xFFFF] << 1) | 0x0;
+            state->memory[state->sp - 2 & 0xFFFF] = (state->memory[state->sp - 2 & 0xFFFF] << 1) | state->cc.ac;
+            state->memory[state->sp - 2 & 0xFFFF] = (state->memory[state->sp - 2 & 0xFFFF] << 1) | 0x0;
+            state->memory[state->sp - 2 & 0xFFFF] = (state->memory[state->sp - 2 & 0xFFFF] << 1) | state->cc.p;
+            state->memory[state->sp - 2 & 0xFFFF] = (state->memory[state->sp - 2 & 0xFFFF] << 1) | 0x01;
+            state->memory[state->sp - 2 & 0xFFFF] = (state->memory[state->sp - 2 & 0xFFFF] << 1) | state->cc.cy;
             state->sp -= 2;
             break;
         case 0xf6:  //ORI    D8
@@ -2693,8 +2683,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             //Conditional Return
             //If sign flag is 1 (i.e result was a negative integer), RET:
             if (state->cc.s == 1){
-                state->pc = (state->memory[state->sp + 1] << 8) | state->memory[state->sp];
-                state->sp += 2;
+                Return(state);
             }
             break;
         case 0xf9:  //SPHL
@@ -2785,12 +2774,18 @@ void Jump(State8080* state, unsigned char *opcode){
 
 void Call(State8080* state, unsigned char *opcode){
     //Store the address of the next instruction on the stack pointer (remember the stack "grows downward").
-    //The reason we store pc + 2 (which at this point in time is actually the second address byte of the CALL instruction, i.e 1 step BEFORE the address of the next instruction after return) is the fact that the pc will increment by 1 after RET (like any other instruction), meaning that in practice it will actually start there.
-    state->memory[state->sp - 1 & 0xFFFF] = (state->pc + 2) >> 8; //The & 0xFFFF is for the event that sp is 0 or 1. Due to what I THINK is type promotion, state->sp - 1 becomes 0xFFFFFFFF instead of 0xFFFF.
-    state->memory[state->sp - 2 & 0xFFFF] = (state->pc + 2) & 0xff;
+    state->memory[state->sp - 1 & 0xFFFF] = (state->pc + 3) >> 8; //The & 0xFFFF is for the event that sp is 0 or 1. Due to what I THINK is type promotion, state->sp - 1 becomes 0xFFFFFFFF instead of 0xFFFF.
+    state->memory[state->sp - 2 & 0xFFFF] = (state->pc + 3) & 0xff;
     state->sp -= 2;
     state->pc = (opcode[2] << 8) | opcode[1];
     state->pc--; //Decrement pc, since the pc will get incremented after this function ends. Not decrementing would mean that the program starts at the CALLed address + 1.
+}
+
+void Return(State8080* state){
+    //SP contains a memory address. The contents of this address + 1 are put into the high order bits, and the contents of the address itself (i.e without the +1) are the low order bits.
+    state->pc = (state->memory[state->sp + 1 & 0xFFFF] << 8) | state->memory[state->sp];
+    state->sp += 2;
+    state->pc--; //Decrement the pc so that the program starts at the return address rather than the return address +1 (pc will increment after this instruction).
 }
 
 void Restart(State8080* state, uint16_t newaddr){
@@ -2857,7 +2852,7 @@ int LoadFile(uint8_t *memory){
             //invaders = fopen("Processor diagnostics\\CPUTEST\\CPUTEST.bin", "rb"); memory += 0x100;
 
             //TST8080
-            invaders = fopen("Processor diagnostics\\TST8080\\TST8080.bin", "rb"); memory += 0x100;
+            //invaders = fopen("Processor diagnostics\\TST8080\\TST8080.bin", "rb"); memory += 0x100;
 
             filecount = 1;
         }
@@ -3146,7 +3141,7 @@ void Disassemble8080OpToFile(unsigned char *codebuffer, int pc, FILE *output){
         case 0xe7: fprintf(output, "RST    4       "); break;
         case 0xe8: fprintf(output, "RPE            "); break;
         case 0xe9: fprintf(output, "PCHL           "); break;
-        case 0xea: fprintf(output, "JPE    $%02x%02x", code[2], code[1]); opbytes = 3; break;
+        case 0xea: fprintf(output, "JPE    $%02x%02x   ", code[2], code[1]); opbytes = 3; break;
         case 0xeb: fprintf(output, "XCHG           "); break;
         case 0xec: fprintf(output, "CPE    $%02x%02x   ", code[2], code[1]); opbytes = 3; break;
         case 0xed: fprintf(output, "CALL   $%02x%02x   ", code[2], code[1]); opbytes = 3; break;
