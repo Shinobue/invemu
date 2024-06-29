@@ -676,6 +676,7 @@ void Emulate8080Op(State8080* state, FILE *output){
         case 0x27:  //DAA
             //Decimal Adjust Accumulator
             //Not used in space invaders
+            {
             uint16_t result = state->a;
             if (((result & 0x0F) > 9) || state->cc.ac){
                 result = result + 6; //Add 6 to the four rightmost bits.
@@ -689,6 +690,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->cc.cy = (result > 0xff);
             state->cc.ac = ((result & 0x0F) < (state->a & 0x0F));
             state->a = result;
+            }
             break;
         case 0x28:  //NOP
             //No op
@@ -1745,7 +1747,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->cc.s = ((result & 0x80) != 0);
             state->cc.p = Parity((uint8_t) (result & 0xff));
             state->cc.cy = 0x0;
-            state->cc.ac = ((state->a & 0x8) | (state->b & 0x8)); //ac is set to the logical OR of bit 3 of the values in operation. In this case, the OR of bit 3 (0000 1000) in A & B
+            state->cc.ac = ((state->a & 0x8) | (state->b & 0x8)) >> 3; //ac is set to the logical OR of bit 3 of the values in operation. In this case, the OR of bit 3 (0000 1000) in A & B
             state->a = result & 0xff;
             }
             break;
@@ -1759,7 +1761,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->cc.s = ((result & 0x80) != 0);
             state->cc.p = Parity((uint8_t) (result & 0xff));
             state->cc.cy = 0x0;
-            state->cc.ac = ((state->a & 0x8) | (state->c & 0x8));
+            state->cc.ac = ((state->a & 0x8) | (state->c & 0x8)) >> 3;
             state->a = result & 0xff;
             }
             break;
@@ -1773,7 +1775,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->cc.s = ((result & 0x80) != 0);
             state->cc.p = Parity((uint8_t) (result & 0xff));
             state->cc.cy = 0x0;
-            state->cc.ac = ((state->a & 0x8) | (state->d & 0x8));
+            state->cc.ac = ((state->a & 0x8) | (state->d & 0x8)) >> 3;
             state->a = result & 0xff;
             }
             break;
@@ -1787,7 +1789,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->cc.s = ((result & 0x80) != 0);
             state->cc.p = Parity((uint8_t) (result & 0xff));
             state->cc.cy = 0x0;
-            state->cc.ac = ((state->a & 0x8) | (state->e & 0x8));
+            state->cc.ac = ((state->a & 0x8) | (state->e & 0x8)) >> 3;
             state->a = result & 0xff;
             }
             break;
@@ -1801,7 +1803,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->cc.s = ((result & 0x80) != 0);
             state->cc.p = Parity((uint8_t) (result & 0xff));
             state->cc.cy = 0x0;
-            state->cc.ac = ((state->a & 0x8) | (state->h & 0x8));
+            state->cc.ac = ((state->a & 0x8) | (state->h & 0x8)) >> 3;
             state->a = result & 0xff;
             }
             break;
@@ -1815,7 +1817,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->cc.s = ((result & 0x80) != 0);
             state->cc.p = Parity((uint8_t) (result & 0xff));
             state->cc.cy = 0x0;
-            state->cc.ac = ((state->a & 0x8) | (state->l & 0x8));
+            state->cc.ac = ((state->a & 0x8) | (state->l & 0x8)) >> 3;
             state->a = result & 0xff;
             }
             break;
@@ -1831,7 +1833,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->cc.s = ((result & 0x80) != 0);
             state->cc.p = Parity((uint8_t) (result & 0xff));
             state->cc.cy = 0x0;
-            state->cc.ac = ((state->a & 0x8) | (state->memory[offset] & 0x8));
+            state->cc.ac = ((state->a & 0x8) | (state->memory[offset] & 0x8)) >> 3;
             state->a = result & 0xff;
             }
             break;
@@ -1845,7 +1847,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->cc.s = ((result & 0x80) != 0);
             state->cc.p = Parity((uint8_t) (result & 0xff));
             state->cc.cy = 0x0;
-            state->cc.ac = ((state->a & 0x8) | (state->a & 0x8));
+            state->cc.ac = ((state->a & 0x8) | (state->a & 0x8)) >> 3;
             state->a = result & 0xff;
             }
             break;
@@ -2512,7 +2514,8 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->cc.s = ((result & 0x80) != 0);
             state->cc.p = Parity((uint8_t) (result & 0xff));
             state->cc.cy = 0;
-            state->cc.ac = 0;
+            //state->cc.ac = 0; //According to the user's guide, auxiliary carry should be set to 0. Doing so will cause CPUTEST.COM to fail, so this emulator does not do this.
+            state->cc.ac = ((state->a & 0x8) | (opcode[1] & 0x8)) >> 3; //Programmer's guide says that AND operations use this logic, does not say anything about excluding ANI D8, so this is included.
             state->a = result & 0xff;
             state->pc += 1;
             }
@@ -2836,7 +2839,7 @@ int LoadFile(uint8_t *memory){
         //Processor diagnostics.
         if (cpmflag == 1){
 
-            //cpudiag
+            //cpudiag //Cleared
             //invaders = fopen("Processor diagnostics\\cpudiag\\cpudiag.bin", "rb"); memory += 0x100; //Offset memory by 0x100, since that's where cpudiag starts. Instructions begin there, and the pc should also start there.
 
             //8080EXER
@@ -2845,13 +2848,13 @@ int LoadFile(uint8_t *memory){
             //8080EXM
             //invaders = fopen("Processor diagnostics\\8080EXM\\8080EXM.bin", "rb"); memory += 0x100;
 
-            //8080PRE
+            //8080PRE //Cleared
             //invaders = fopen("Processor diagnostics\\8080PRE\\8080PRE.bin", "rb"); memory += 0x100;
 
-            //CPUTEST
+            //CPUTEST //Cleared
             //invaders = fopen("Processor diagnostics\\CPUTEST\\CPUTEST.bin", "rb"); memory += 0x100;
 
-            //TST8080
+            //TST8080 //Cleared
             //invaders = fopen("Processor diagnostics\\TST8080\\TST8080.bin", "rb"); memory += 0x100;
 
             filecount = 1;

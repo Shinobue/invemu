@@ -34,6 +34,10 @@ int main(int argc, char *argv[]){
 
     //Allocate 64K. 8K is used for the ROM, 8K for the RAM (of which 7K is VRAM). Processor has an address width of 16 bits however, so 2^16 = 65536 possible addresses.
     state->memory = malloc(sizeof(uint8_t) * 0x10000);
+    while (i < 0x10000){
+        state->memory[i] = 0;
+        i++;
+    }
 
     if (cpmflag) state->memory[0x05] = 0xC9; //Return after OS call (CP/M diagnostics only).
 
@@ -64,7 +68,7 @@ int main(int argc, char *argv[]){
         if (cpmflag && state->pc == 5){
             int z = 0;
             if (state->c == 2){
-                printf("%c\n", state->e);
+                printf("%c", state->e);
             }
             else if (state->c == 9){
                 while ((state->memory[((state->d << 8) | state->e) + z] != 0x24)){
