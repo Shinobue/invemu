@@ -39,7 +39,7 @@ int main(int argc, char *argv[]){
         i++;
     }
 
-    if (cpmflag) state->memory[0x05] = 0xC9; //Return after OS call (CP/M diagnostics only).
+    if (cpmflag) state->memory[0x05] = 0xD3; state->memory[0x06] = 0x01; state->memory[0x07] = 0xC9; //Set OUT 1. Return after OS call (CP/M diagnostics only).
 
     //Load ROM file(s) into memory.
     RAMoffset = LoadFile(state->memory);
@@ -72,7 +72,7 @@ int main(int argc, char *argv[]){
             }
             else if (state->c == 9){
                 while ((state->memory[((state->d << 8) | state->e) + z] != 0x24)){
-                    printf("%c", state->memory[((state->d << 8) | state->e) + z], state->memory[((state->d << 8) | state->e) + z]);
+                    printf("%c", state->memory[((state->d << 8) | state->e) + z]);
                     z++;
                 }
                 printf("\n");

@@ -680,6 +680,10 @@ void Emulate8080Op(State8080* state, FILE *output){
             uint16_t result = state->a;
             if (((result & 0x0F) > 9) || state->cc.ac){
                 result = result + 6; //Add 6 to the four rightmost bits.
+                state->cc.ac = ((state->a & 0x0F) + 6 > 0x0F);
+            }
+            else{
+                state->cc.ac = 0;
             }
             if (((result >> 4) > 9) || state->cc.cy){
                 result = result + 96; //Add 6 to the four leftmost bits. Instead of shifting, just add 6 (0000 0110) shifted 4 bits to the left, which equals 96 (0110 0000).
@@ -687,8 +691,9 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->cc.z = ((result & 0xff) == 0);
             state->cc.s = ((result & 0x80) != 0);
             state->cc.p = Parity((uint8_t) (result & 0xff));
-            state->cc.cy = (result > 0xff);
-            state->cc.ac = ((result & 0x0F) < (state->a & 0x0F));
+            if (result > 0xff){
+                state->cc.cy = 1; //Regular carry is unaffected on the DAA instruction if the result of the calculation did not produce a carry.
+            }
             state->a = result;
             }
             break;
@@ -1290,8 +1295,8 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->cc.z = ((result & 0xff) == 0);
             state->cc.s = ((result & 0x80) != 0);
             state->cc.p = Parity((uint8_t) (result & 0xff));
+            state->cc.ac = ((((state->b ^ state->a) & 0x10) ^ (result & 0x10)) >> 4);
             state->cc.cy = (result > 0xff);
-            state->cc.ac = ((result & 0x0F) < (state->a & 0x0F));
             state->a = result & 0xff;
             }
             break;
@@ -1304,8 +1309,8 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->cc.z = ((result & 0xff) == 0);
             state->cc.s = ((result & 0x80) != 0);
             state->cc.p = Parity((uint8_t) (result & 0xff));
+            state->cc.ac = ((((state->c ^ state->a) & 0x10) ^ (result & 0x10)) >> 4);
             state->cc.cy = (result > 0xff);
-            state->cc.ac = ((result & 0x0F) < (state->a & 0x0F));
             state->a = result & 0xff;
             }
             break;
@@ -1318,8 +1323,8 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->cc.z = ((result & 0xff) == 0);
             state->cc.s = ((result & 0x80) != 0);
             state->cc.p = Parity((uint8_t) (result & 0xff));
+            state->cc.ac = ((((state->d ^ state->a) & 0x10) ^ (result & 0x10)) >> 4);
             state->cc.cy = (result > 0xff);
-            state->cc.ac = ((result & 0x0F) < (state->a & 0x0F));
             state->a = result & 0xff;
             }
             break;
@@ -1332,8 +1337,8 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->cc.z = ((result & 0xff) == 0);
             state->cc.s = ((result & 0x80) != 0);
             state->cc.p = Parity((uint8_t) (result & 0xff));
+            state->cc.ac = ((((state->e ^ state->a) & 0x10) ^ (result & 0x10)) >> 4);
             state->cc.cy = (result > 0xff);
-            state->cc.ac = ((result & 0x0F) < (state->a & 0x0F));
             state->a = result & 0xff;
             }
             break;
@@ -1346,8 +1351,8 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->cc.z = ((result & 0xff) == 0);
             state->cc.s = ((result & 0x80) != 0);
             state->cc.p = Parity((uint8_t) (result & 0xff));
+            state->cc.ac = ((((state->h ^ state->a) & 0x10) ^ (result & 0x10)) >> 4);
             state->cc.cy = (result > 0xff);
-            state->cc.ac = ((result & 0x0F) < (state->a & 0x0F));
             state->a = result & 0xff;
             }
             break;
@@ -1360,8 +1365,8 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->cc.z = ((result & 0xff) == 0);
             state->cc.s = ((result & 0x80) != 0);
             state->cc.p = Parity((uint8_t) (result & 0xff));
+            state->cc.ac = ((((state->l ^ state->a) & 0x10) ^ (result & 0x10)) >> 4);
             state->cc.cy = (result > 0xff);
-            state->cc.ac = ((result & 0x0F) < (state->a & 0x0F));
             state->a = result & 0xff;
             }
             break;
@@ -1376,8 +1381,8 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->cc.z = ((result & 0xff) == 0);
             state->cc.s = ((result & 0x80) != 0);
             state->cc.p = Parity((uint8_t) (result & 0xff));
+            state->cc.ac = ((((state->memory[offset] ^ state->a) & 0x10) ^ (result & 0x10)) >> 4);
             state->cc.cy = (result > 0xff);
-            state->cc.ac = ((result & 0x0F) < (state->a & 0x0F));
             state->a = result & 0xff;
             }
             break;
@@ -1390,8 +1395,8 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->cc.z = ((result & 0xff) == 0);
             state->cc.s = ((result & 0x80) != 0);
             state->cc.p = Parity((uint8_t) (result & 0xff));
+            state->cc.ac = ((((state->a ^ state->a) & 0x10) ^ (result & 0x10)) >> 4);
             state->cc.cy = (result > 0xff);
-            state->cc.ac = ((result & 0x0F) < (state->a & 0x0F));
             state->a = result & 0xff;
             }
             break;
@@ -1404,8 +1409,8 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->cc.z = ((result & 0xff) == 0);
             state->cc.s = ((result & 0x80) != 0);
             state->cc.p = Parity((uint8_t) (result & 0xff));
+            state->cc.ac = ((((state->b ^ state->a) & 0x10) ^ (result & 0x10)) >> 4);
             state->cc.cy = (result > 0xff);
-            state->cc.ac = ((result & 0x0F) < (state->a & 0x0F));
             state->a = result & 0xff;
             }
             break;
@@ -1418,8 +1423,8 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->cc.z = ((result & 0xff) == 0);
             state->cc.s = ((result & 0x80) != 0);
             state->cc.p = Parity((uint8_t) (result & 0xff));
+            state->cc.ac = ((((state->c ^ state->a) & 0x10) ^ (result & 0x10)) >> 4);
             state->cc.cy = (result > 0xff);
-            state->cc.ac = ((result & 0x0F) < (state->a & 0x0F));
             state->a = result & 0xff;
             }
             break;
@@ -1432,8 +1437,8 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->cc.z = ((result & 0xff) == 0);
             state->cc.s = ((result & 0x80) != 0);
             state->cc.p = Parity((uint8_t) (result & 0xff));
+            state->cc.ac = ((((state->d ^ state->a) & 0x10) ^ (result & 0x10)) >> 4);
             state->cc.cy = (result > 0xff);
-            state->cc.ac = ((result & 0x0F) < (state->a & 0x0F));
             state->a = result & 0xff;
             }
             break;
@@ -1446,8 +1451,8 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->cc.z = ((result & 0xff) == 0);
             state->cc.s = ((result & 0x80) != 0);
             state->cc.p = Parity((uint8_t) (result & 0xff));
+            state->cc.ac = ((((state->e ^ state->a) & 0x10) ^ (result & 0x10)) >> 4);
             state->cc.cy = (result > 0xff);
-            state->cc.ac = ((result & 0x0F) < (state->a & 0x0F));
             state->a = result & 0xff;
             }
             break;
@@ -1460,8 +1465,8 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->cc.z = ((result & 0xff) == 0);
             state->cc.s = ((result & 0x80) != 0);
             state->cc.p = Parity((uint8_t) (result & 0xff));
+            state->cc.ac = ((((state->h ^ state->a) & 0x10) ^ (result & 0x10)) >> 4);
             state->cc.cy = (result > 0xff);
-            state->cc.ac = ((result & 0x0F) < (state->a & 0x0F));
             state->a = result & 0xff;
             }
             break;
@@ -1474,8 +1479,8 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->cc.z = ((result & 0xff) == 0);
             state->cc.s = ((result & 0x80) != 0);
             state->cc.p = Parity((uint8_t) (result & 0xff));
+            state->cc.ac = ((((state->l ^ state->a) & 0x10) ^ (result & 0x10)) >> 4);
             state->cc.cy = (result > 0xff);
-            state->cc.ac = ((result & 0x0F) < (state->a & 0x0F));
             state->a = result & 0xff;
             }
             break;
@@ -1490,8 +1495,8 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->cc.z = ((result & 0xff) == 0);
             state->cc.s = ((result & 0x80) != 0);
             state->cc.p = Parity((uint8_t) (result & 0xff));
+            state->cc.ac = ((((state->memory[offset] ^ state->a) & 0x10) ^ (result & 0x10)) >> 4);
             state->cc.cy = (result > 0xff);
-            state->cc.ac = ((result & 0x0F) < (state->a & 0x0F));
             state->a = result & 0xff;
             }
             break;
@@ -1504,8 +1509,8 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->cc.z = ((result & 0xff) == 0);
             state->cc.s = ((result & 0x80) != 0);
             state->cc.p = Parity((uint8_t) (result & 0xff));
+            state->cc.ac = ((((state->a ^ state->a) & 0x10) ^ (result & 0x10)) >> 4);
             state->cc.cy = (result > 0xff);
-            state->cc.ac = ((result & 0x0F) < (state->a & 0x0F));
             state->a = result & 0xff;
             }
             break;
@@ -1518,8 +1523,8 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->cc.z = ((result & 0xff) == 0);
             state->cc.s = ((result & 0x80) != 0);
             state->cc.p = Parity((uint8_t) (result & 0xff));
+            state->cc.ac = (~(((state->b ^ state->a) & 0x10) ^ (result & 0x10)) >> 4);
             state->cc.cy = (result > 0xff);
-            state->cc.ac = ((result & 0x0F) < (state->a & 0x0F));
             state->a = result & 0xff;
             }
             break;
@@ -1532,8 +1537,8 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->cc.z = ((result & 0xff) == 0);
             state->cc.s = ((result & 0x80) != 0);
             state->cc.p = Parity((uint8_t) (result & 0xff));
+            state->cc.ac = (~(((state->c ^ state->a) & 0x10) ^ (result & 0x10)) >> 4);
             state->cc.cy = (result > 0xff);
-            state->cc.ac = ((result & 0x0F) < (state->a & 0x0F));
             state->a = result & 0xff;
             }
             break;
@@ -1546,8 +1551,8 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->cc.z = ((result & 0xff) == 0);
             state->cc.s = ((result & 0x80) != 0);
             state->cc.p = Parity((uint8_t) (result & 0xff));
+            state->cc.ac = (~(((state->d ^ state->a) & 0x10) ^ (result & 0x10)) >> 4);
             state->cc.cy = (result > 0xff);
-            state->cc.ac = ((result & 0x0F) < (state->a & 0x0F));
             state->a = result & 0xff;
             }
             break;
@@ -1560,8 +1565,8 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->cc.z = ((result & 0xff) == 0);
             state->cc.s = ((result & 0x80) != 0);
             state->cc.p = Parity((uint8_t) (result & 0xff));
+            state->cc.ac = (~(((state->e ^ state->a) & 0x10) ^ (result & 0x10)) >> 4);
             state->cc.cy = (result > 0xff);
-            state->cc.ac = ((result & 0x0F) < (state->a & 0x0F));
             state->a = result & 0xff;
             }
             break;
@@ -1574,8 +1579,8 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->cc.z = ((result & 0xff) == 0);
             state->cc.s = ((result & 0x80) != 0);
             state->cc.p = Parity((uint8_t) (result & 0xff));
+            state->cc.ac = (~(((state->h ^ state->a) & 0x10) ^ (result & 0x10)) >> 4);
             state->cc.cy = (result > 0xff);
-            state->cc.ac = ((result & 0x0F) < (state->a & 0x0F));
             state->a = result & 0xff;
             }
             break;
@@ -1588,8 +1593,8 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->cc.z = ((result & 0xff) == 0);
             state->cc.s = ((result & 0x80) != 0);
             state->cc.p = Parity((uint8_t) (result & 0xff));
+            state->cc.ac = (~(((state->l ^ state->a) & 0x10) ^ (result & 0x10)) >> 4);
             state->cc.cy = (result > 0xff);
-            state->cc.ac = ((result & 0x0F) < (state->a & 0x0F));
             state->a = result & 0xff;
             }
             break;
@@ -1604,8 +1609,8 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->cc.z = ((result & 0xff) == 0);
             state->cc.s = ((result & 0x80) != 0);
             state->cc.p = Parity((uint8_t) (result & 0xff));
+            state->cc.ac = (~(((state->memory[offset] ^ state->a) & 0x10) ^ (result & 0x10)) >> 4);
             state->cc.cy = (result > 0xff);
-            state->cc.ac = ((result & 0x0F) < (state->a & 0x0F));
             state->a = result & 0xff;
             }
             break;
@@ -1618,8 +1623,8 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->cc.z = ((result & 0xff) == 0);
             state->cc.s = ((result & 0x80) != 0);
             state->cc.p = Parity((uint8_t) (result & 0xff));
+            state->cc.ac = (~(((state->a ^ state->a) & 0x10) ^ (result & 0x10)) >> 4);
             state->cc.cy = (result > 0xff);
-            state->cc.ac = ((result & 0x0F) < (state->a & 0x0F));
             state->a = result & 0xff;
             }
             break;
@@ -1632,8 +1637,8 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->cc.z = ((result & 0xff) == 0);
             state->cc.s = ((result & 0x80) != 0);
             state->cc.p = Parity((uint8_t) (result & 0xff));
+            state->cc.ac = (~(((state->b ^ state->a) & 0x10) ^ (result & 0x10)) >> 4);
             state->cc.cy = (result > 0xff);
-            state->cc.ac = ((result & 0x0F) < (state->a & 0x0F));
             state->a = result & 0xff;
             }
             break;
@@ -1646,8 +1651,8 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->cc.z = ((result & 0xff) == 0);
             state->cc.s = ((result & 0x80) != 0);
             state->cc.p = Parity((uint8_t) (result & 0xff));
+            state->cc.ac = (~(((state->c ^ state->a) & 0x10) ^ (result & 0x10)) >> 4);
             state->cc.cy = (result > 0xff);
-            state->cc.ac = ((result & 0x0F) < (state->a & 0x0F));
             state->a = result & 0xff;
             }
             break;
@@ -1660,8 +1665,8 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->cc.z = ((result & 0xff) == 0);
             state->cc.s = ((result & 0x80) != 0);
             state->cc.p = Parity((uint8_t) (result & 0xff));
+            state->cc.ac = (~(((state->d ^ state->a) & 0x10) ^ (result & 0x10)) >> 4);
             state->cc.cy = (result > 0xff);
-            state->cc.ac = ((result & 0x0F) < (state->a & 0x0F));
             state->a = result & 0xff;
             }
             break;
@@ -1674,8 +1679,8 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->cc.z = ((result & 0xff) == 0);
             state->cc.s = ((result & 0x80) != 0);
             state->cc.p = Parity((uint8_t) (result & 0xff));
+            state->cc.ac = (~(((state->e ^ state->a) & 0x10) ^ (result & 0x10)) >> 4);
             state->cc.cy = (result > 0xff);
-            state->cc.ac = ((result & 0x0F) < (state->a & 0x0F));
             state->a = result & 0xff;
             }
             break;
@@ -1688,8 +1693,8 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->cc.z = ((result & 0xff) == 0);
             state->cc.s = ((result & 0x80) != 0);
             state->cc.p = Parity((uint8_t) (result & 0xff));
+            state->cc.ac = (~(((state->h ^ state->a) & 0x10) ^ (result & 0x10)) >> 4);
             state->cc.cy = (result > 0xff);
-            state->cc.ac = ((result & 0x0F) < (state->a & 0x0F));
             state->a = result & 0xff;
             }
             break;
@@ -1702,8 +1707,8 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->cc.z = ((result & 0xff) == 0);
             state->cc.s = ((result & 0x80) != 0);
             state->cc.p = Parity((uint8_t) (result & 0xff));
+            state->cc.ac = (~(((state->l ^ state->a) & 0x10) ^ (result & 0x10)) >> 4);
             state->cc.cy = (result > 0xff);
-            state->cc.ac = ((result & 0x0F) < (state->a & 0x0F));
             state->a = result & 0xff;
             }
             break;
@@ -1718,8 +1723,8 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->cc.z = ((result & 0xff) == 0);
             state->cc.s = ((result & 0x80) != 0);
             state->cc.p = Parity((uint8_t) (result & 0xff));
+            state->cc.ac = (~(((state->memory[offset] ^ state->a) & 0x10) ^ (result & 0x10)) >> 4);
             state->cc.cy = (result > 0xff);
-            state->cc.ac = ((result & 0x0F) < (state->a & 0x0F));
             state->a = result & 0xff;
             }
             break;
@@ -1732,8 +1737,8 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->cc.z = ((result & 0xff) == 0);
             state->cc.s = ((result & 0x80) != 0);
             state->cc.p = Parity((uint8_t) (result & 0xff));
+            state->cc.ac = (~(((state->a ^ state->a) & 0x10) ^ (result & 0x10)) >> 4);
             state->cc.cy = (result > 0xff);
-            state->cc.ac = ((result & 0x0F) < (state->a & 0x0F));
             state->a = result & 0xff;
             }
             break;
@@ -2088,8 +2093,8 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->cc.z = ((result & 0xff) == 0);
             state->cc.s = ((result & 0x80) != 0);
             state->cc.p = Parity((uint8_t) (result & 0xff));
+            state->cc.ac = (~(((state->b ^ state->a) & 0x10) ^ (result & 0x10)) >> 4);
             state->cc.cy = (result > 0xff); //If (A - B) > 0xff, then a was less than b (since it loops around, starting at 0xFFFF and going down). Neither A nor B can be larger than 0xff. Same logic as in other commands higher up in this file.
-            state->cc.ac = ((result & 0x0F) < (state->a & 0x0F));
             }
             break;
         case 0xb9:  //CMP    C
@@ -2101,8 +2106,8 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->cc.z = ((result & 0xff) == 0);
             state->cc.s = ((result & 0x80) != 0);
             state->cc.p = Parity((uint8_t) (result & 0xff));
+            state->cc.ac = (~(((state->c ^ state->a) & 0x10) ^ (result & 0x10)) >> 4);
             state->cc.cy = (result > 0xff);
-            state->cc.ac = ((result & 0x0F) < (state->a & 0x0F));
             }
             break;
         case 0xba:  //CMP    D
@@ -2114,8 +2119,8 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->cc.z = ((result & 0xff) == 0);
             state->cc.s = ((result & 0x80) != 0);
             state->cc.p = Parity((uint8_t) (result & 0xff));
+            state->cc.ac = (~(((state->d ^ state->a) & 0x10) ^ (result & 0x10)) >> 4);
             state->cc.cy = (result > 0xff);
-            state->cc.ac = ((result & 0x0F) < (state->a & 0x0F));
             }
             break;
         case 0xbb:  //CMP    E
@@ -2127,8 +2132,8 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->cc.z = ((result & 0xff) == 0);
             state->cc.s = ((result & 0x80) != 0);
             state->cc.p = Parity((uint8_t) (result & 0xff));
+            state->cc.ac = (~(((state->e ^ state->a) & 0x10) ^ (result & 0x10)) >> 4);
             state->cc.cy = (result > 0xff);
-            state->cc.ac = ((result & 0x0F) < (state->a & 0x0F));
             }
             break;
         case 0xbc:  //CMP    H
@@ -2140,8 +2145,8 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->cc.z = ((result & 0xff) == 0);
             state->cc.s = ((result & 0x80) != 0);
             state->cc.p = Parity((uint8_t) (result & 0xff));
+            state->cc.ac = (~(((state->h ^ state->a) & 0x10) ^ (result & 0x10)) >> 4);
             state->cc.cy = (result > 0xff);
-            state->cc.ac = ((result & 0x0F) < (state->a & 0x0F));
             }
             break;
         case 0xbd:  //CMP    L
@@ -2153,8 +2158,8 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->cc.z = ((result & 0xff) == 0);
             state->cc.s = ((result & 0x80) != 0);
             state->cc.p = Parity((uint8_t) (result & 0xff));
+            state->cc.ac = (~(((state->l ^ state->a) & 0x10) ^ (result & 0x10)) >> 4);
             state->cc.cy = (result > 0xff);
-            state->cc.ac = ((result & 0x0F) < (state->a & 0x0F));
             }
             break;
         case 0xbe:  //CMP    M
@@ -2168,8 +2173,8 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->cc.z = ((result & 0xff) == 0);
             state->cc.s = ((result & 0x80) != 0);
             state->cc.p = Parity((uint8_t) (result & 0xff));
+            state->cc.ac = (~(((state->memory[offset] ^ state->a) & 0x10) ^ (result & 0x10)) >> 4);
             state->cc.cy = (result > 0xff);
-            state->cc.ac = ((result & 0x0F) < (state->a & 0x0F));
             }
             break;
         case 0xbf:  //CMP    A
@@ -2181,8 +2186,8 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->cc.z = ((result & 0xff) == 0);
             state->cc.s = ((result & 0x80) != 0);
             state->cc.p = Parity((uint8_t) (result & 0xff));
+            state->cc.ac = (~(((state->a ^ state->a) & 0x10) ^ (result & 0x10)) >> 4);
             state->cc.cy = (result > 0xff);
-            state->cc.ac = ((result & 0x0F) < (state->a & 0x0F));
             }
             break;
         case 0xc0:  //RNZ
@@ -2241,8 +2246,8 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->cc.z = ((result & 0xff) == 0);
             state->cc.s = ((result & 0x80) != 0);
             state->cc.p = Parity((uint8_t) (result & 0xff));
+            state->cc.ac = ((((opcode[1] ^ state->a) & 0x10) ^ (result & 0x10)) >> 4);
             state->cc.cy = (result > 0xff);
-            state->cc.ac = ((result & 0x0F) < (state->a & 0x0F));
             state->a = result & 0xff;
             state->pc += 1;
             }
@@ -2305,8 +2310,8 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->cc.z = ((result & 0xff) == 0);
             state->cc.s = ((result & 0x80) != 0);
             state->cc.p = Parity((uint8_t) (result & 0xff));
+            state->cc.ac = ((((opcode[1] ^ state->a) & 0x10) ^ (result & 0x10)) >> 4);
             state->cc.cy = (result > 0xff);
-            state->cc.ac = ((result & 0x0F) < (state->a & 0x0F));
             state->a = result & 0xff;
             state->pc += 1;
             }
@@ -2371,8 +2376,8 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->cc.z = ((result & 0xff) == 0);
             state->cc.s = ((result & 0x80) != 0);
             state->cc.p = Parity((uint8_t) (result & 0xff));
+            state->cc.ac = (~(((opcode[1] ^ state->a) & 0x10) ^ (result & 0x10)) >> 4);
             state->cc.cy = (result > 0xff);
-            state->cc.ac = ((result & 0x0F) < (state->a & 0x0F));
             state->a = result & 0xff;
             state->pc += 1;
             }
@@ -2441,8 +2446,8 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->cc.z = ((result & 0xff) == 0);
             state->cc.s = ((result & 0x80) != 0);
             state->cc.p = Parity((uint8_t) (result & 0xff));
+            state->cc.ac = (~(((opcode[1] ^ state->a) & 0x10) ^ (result & 0x10)) >> 4);
             state->cc.cy = (result > 0xff);
-            state->cc.ac = ((result & 0x0F) < (state->a & 0x0F));
             state->a = result & 0xff;
             state->pc += 1;
             }
@@ -2733,8 +2738,8 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->cc.z = ((result & 0xff) == 0);
             state->cc.s = ((result & 0x80) != 0);
             state->cc.p = Parity((uint8_t) (result & 0xff));
+            state->cc.ac = (~(((opcode[1] ^ state->a) & 0x10) ^ (result & 0x10)) >> 4);
             state->cc.cy = (result > 0xff);
-            state->cc.ac = ((result & 0x0F) < (state->a & 0x0F));
             state->pc += 1;
             }
             break;
@@ -2845,7 +2850,7 @@ int LoadFile(uint8_t *memory){
             //8080EXER
             //invaders = fopen("Processor diagnostics\\8080EXER\\8080EXER.bin", "rb"); memory += 0x100;
 
-            //8080EXM
+            //8080EXM //Cleared
             //invaders = fopen("Processor diagnostics\\8080EXM\\8080EXM.bin", "rb"); memory += 0x100;
 
             //8080PRE //Cleared
