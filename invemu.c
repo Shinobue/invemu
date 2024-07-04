@@ -30,7 +30,7 @@ int main(int argc, char *argv[]){
     if (cpmflag == 1) state->pc = 0x100; //For CP/M cpu diagnostics.
 
     //Set all registers and condition codes to 0.
-    state->cc.z = state->cc.s = state->cc.p = state->cc.cy = state->cc.ac = state->a = state->b = state->c = state->d = state->e = state->h = state->l = state->sp = 0;
+    state->cc.z = state->cc.s = state->cc.p = state->cc.cy = state->cc.ac = state->a = state->b = state->c = state->d = state->e = state->h = state->l = state->sp = state->int_enable = 0;
 
     //Allocate 64K. 8K is used for the ROM, 8K for the RAM (of which 7K is VRAM). Processor has an address width of 16 bits however, so 2^16 = 65536 possible addresses.
     state->memory = malloc(sizeof(uint8_t) * 0x10000);
@@ -63,7 +63,8 @@ int main(int argc, char *argv[]){
         output = fopen("output.txt", "w");
         fprintf(output, " Ins#   pc   op  mnem   byte(s)\n"); //Also print to file if flag enabled.
     }
-    while (i < 500000){
+    //while (state->pc != 0){ //For CPU diagnostics.
+    while (i < 50000000){
         //CPU Diagnostics
         if (cpmflag && state->pc == 5){
             int z = 0;
@@ -86,7 +87,7 @@ int main(int argc, char *argv[]){
         //Emulate instruction
         Emulate8080Op(state, output);
 
-        stop = clock(); //Check the current clock tick count. This divided by CLOCKS_PER_SEC is the amount of clock ticks elapsed.
+        stop = clock(); //Check the current clock tick count. This divided by CLOCKS_PER_SEC is the amount of clock ticks elapsed in a second.
         //printf("start: %ld, stop: %ld, stop - start = %ld, clocks/sec = %f\n", start, stop, stop - start, (float) (stop - start) / CLOCKS_PER_SEC);
 
         //Refresh the screen every 1/60th of a second (~0.017s).

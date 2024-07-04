@@ -2347,7 +2347,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             //Output
             {
             uint8_t port = opcode[1];
-            MachineOUT(state, port);
+            ProcessorOUT(state, port);
             state->pc++;
             }
             break;
@@ -2416,7 +2416,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             //Input
             {
             uint8_t port = opcode[1];
-            state->a = MachineIN(state, port);
+            state->a = ProcessorIN(state, port);
             state->pc++;
             }
             break;
@@ -2801,6 +2801,7 @@ void Restart(State8080* state, uint16_t newaddr){
     state->memory[state->sp - 2 & 0xFFFF] = (state->pc + 1) & 0xff;
     state->sp -= 2;
     state->pc = newaddr;
+    state->pc--;
 }
 
 void Pop(State8080* state, uint8_t *high, uint8_t *low){

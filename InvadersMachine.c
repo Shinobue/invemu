@@ -6,8 +6,11 @@
 #include "8080Emulator.h"
 #include <SDL.h>
 
-uint8_t MachineIN(State8080* state, uint8_t port){
+static uint16_t shiftData;
+static uint8_t shiftOffset;
 
+uint8_t ProcessorIN(State8080* state, uint8_t port){
+    uint8_t processorInput;
     switch (port){
         case 0:
         port = port | 0x0E; //bit 1-3 are always 1: 0000 1110
@@ -22,16 +25,31 @@ uint8_t MachineIN(State8080* state, uint8_t port){
         case 2:
         break;
 
-        case 3:
+        case 3: //Bit shift register read.
+        processorInput = shiftData & 0xFF; //Insert the right byte of the shift data into the accumulator.
         break;
-        return port;
     }
 
     //Goes to A register
-    return 1;
+    return processorInput;
 }
 
-uint8_t MachineOUT(State8080* state, uint8_t port){
+void ProcessorOUT(State8080* state, uint8_t port){
+    switch (port){
+        case 2: //Shift amount (3 bits).
+        shiftOffset = state->a & 0x07; //Mask out the 3 rightmost bits.
+        break;
+        case 3:
+        break;
+        case 4: //Shift data.
+        shiftData >>= 8 - shiftOffset; //Perform shift. Shift 8 bits by default, and if the shiftAmount is e.g 6 then shift 8 - 2 = 2 bits.
+        shiftData = (state->a << 8) | shiftData; //Load new data into leftmost byte.
+        break;
+        case 5:
+        break;
+        case 6: //Watch-dog.
+        break;
+    }
 }
 
 void Render(State8080 *state, SDL_Window *window){
