@@ -30,7 +30,7 @@ int main(int argc, char *argv[]){
     if (cpmflag == 1) state->pc = 0x100; //For CP/M cpu diagnostics.
 
     //Set all registers and condition codes to 0.
-    state->cc.z = state->cc.s = state->cc.p = state->cc.cy = state->cc.ac = state->a = state->b = state->c = state->d = state->e = state->h = state->l = state->sp = state->int_enable = 0;
+    state->cc.z = state->cc.s = state->cc.p = state->cc.cy = state->cc.ac = state->a = state->b = state->c = state->d = state->e = state->h = state->l = state->sp = state->int_enable = state->cyclecount = 0;
 
     //Allocate 64K. 8K is used for the ROM, 8K for the RAM (of which 7K is VRAM). Processor has an address width of 16 bits however, so 2^16 = 65536 possible addresses.
     state->memory = malloc(sizeof(uint8_t) * 0x10000);
@@ -64,7 +64,7 @@ int main(int argc, char *argv[]){
         fprintf(output, " Ins#   pc   op  mnem   byte(s)\n"); //Also print to file if flag enabled.
     }
     //while (state->pc != 0){ //For CPU diagnostics.
-    while (i < 50000000){
+    while (i < 500000000){
         //CPU Diagnostics
         if (cpmflag && state->pc == 5){
             int z = 0;

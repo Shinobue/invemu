@@ -6,7 +6,7 @@
 #include "8080Emulator.h"
 #include <SDL.h>
 
-static uint16_t shiftData;
+static uint16_t shiftRegister;
 static uint8_t shiftOffset;
 
 uint8_t ProcessorIN(State8080* state, uint8_t port){
@@ -26,7 +26,7 @@ uint8_t ProcessorIN(State8080* state, uint8_t port){
         break;
 
         case 3: //Bit shift register read.
-        processorInput = shiftData & 0xFF; //Insert the right byte of the shift data into the accumulator.
+        processorInput = shiftRegister & 0xFF; //Insert the right byte of the shift data into the accumulator.
         break;
     }
 
@@ -42,8 +42,8 @@ void ProcessorOUT(State8080* state, uint8_t port){
         case 3:
         break;
         case 4: //Shift data.
-        shiftData >>= 8 - shiftOffset; //Perform shift. Shift 8 bits by default, and if the shiftAmount is e.g 6 then shift 8 - 2 = 2 bits.
-        shiftData = (state->a << 8) | shiftData; //Load new data into leftmost byte.
+        shiftRegister >>= 8 - shiftOffset; //Perform shift. Shift 8 bits by default, and if the shiftAmount is e.g 6 then shift 8 - 2 = 2 bits.
+        shiftRegister = (state->a << 8) | shiftRegister; //Load new data into leftmost byte.
         break;
         case 5:
         break;

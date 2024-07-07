@@ -300,6 +300,7 @@ void Emulate8080Op(State8080* state, FILE *output){
         case 0x00:  //NOP
             //No op
             //printf("NOP");
+            state->cyclecount += 4;
             break;
         case 0x01:  //LXI    B, word
             //Load register pair immediate
@@ -315,6 +316,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->b = opcode[2];
             state->c = opcode[1];
             state->pc += 2;
+            state->cyclecount += 10;
 
             //printf("LXI    B,D16. C = %02X, B = %02X", state->c, state->b);
             break;
@@ -327,6 +329,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->memory[offset] = state->a; //(BC) <- A. Memory located at the address pointed to by the contents of BC is loaded with a.
 
             //printf("STAX   B. A = %02X, B = %02X, C = %02X, BC = %02X, (BC) = %02X", state->a, state->b, state->c, (state->b << 8) + state->c, state->memory[(state->b << 8) + state->c]);
+            state->cyclecount += 7;
             }
             break;
         case 0x03:  //INX    B
@@ -338,6 +341,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             if (state->c == 0){
                 state->b++;
             }
+            state->cyclecount += 5;
             break;
         case 0x04:  //INR    B
             //Increment Register
@@ -360,6 +364,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->cc.ac = ((result & 0x0F) < (state->b & 0x0F));
             //Set actual result to be "result & 0xff", since the actual result is an 8-bit number, and 0xff is 0000 0000 1111 1111. I.e mask out the leftmost 8 bits.
             state->b = result & 0xff;
+            state->cyclecount += 5;
             }
             break;
         case 0x05:  //DCR    B
@@ -373,6 +378,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->cc.p = Parity((uint8_t) (result & 0xff));
             state->cc.ac = ((result & 0x0F) < (state->b & 0x0F)); //For subtraction, processor performs addition on the two's complement of the number to subtrcat (i.e -1 here), and checks for a borrow in that addition. Therefore less than (<), just like with addition.
             state->b = result & 0xff;
+            state->cyclecount += 5;
             }
             break;
         case 0x06:  //MVI    B
@@ -380,15 +386,18 @@ void Emulate8080Op(State8080* state, FILE *output){
             //B <- Byte 2
             state->b = opcode[1];
             state->pc += 1;
+            state->cyclecount += 7;
             break;
         case 0x07:  //RLC
             //Rotate left. Bit 7 (leftmost bit) becomes bit 0, and it also becomes cy.
             //A = A << 1; bit 0 = prev bit 7; CY = prev bit 7
             state->cc.cy = (state->a & 0x80) >> 7;
             state->a = (state->a << 1) | state->cc.cy;
+            state->cyclecount += 4;
             break;
         case 0x08:  //NOP
             //No op
+            state->cyclecount += 4;
             break;
         case 0x09:  //DAD    B
             //Add register pair to H and L
@@ -405,6 +414,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->h = (result >> 8) & 0xff;
             state->l = result & 0xff;
             state->cc.cy = (result > 0xffff); //If the result is greater than 1111 1111 1111 1111, set the carry bit.
+            state->cyclecount += 10;
             }
             break;
         case 0x0a:  //LDAX   B
@@ -414,6 +424,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             uint16_t offset;
             offset = (state->b << 8) | state->c;
             state->a = state->memory[offset];
+            state->cyclecount += 7;
             }
             break;
         case 0x0b:  //DCX    B
@@ -425,6 +436,7 @@ void Emulate8080Op(State8080* state, FILE *output){
                 state->b--;
             }
             state->c--;
+            state->cyclecount += 5;
             break;
         case 0x0c:  //INR    C
             //Increment Register
@@ -437,6 +449,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->cc.p = Parity((uint8_t) (result & 0xff));
             state->cc.ac = ((result & 0x0F) < (state->c & 0x0F));
             state->c = result & 0xff;
+            state->cyclecount += 5;
             }
             break;
         case 0x0d:  //DCR    C
@@ -450,6 +463,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->cc.p = Parity((uint8_t) (result & 0xff));
             state->cc.ac = ((result & 0x0F) < (state->c & 0x0F));
             state->c = result & 0xff;
+            state->cyclecount += 5;
             }
             break;
         case 0x0e:  //MVI    C
@@ -457,15 +471,18 @@ void Emulate8080Op(State8080* state, FILE *output){
             //C <- Byte 2
             state->c = opcode[1];
             state->pc += 1;
+            state->cyclecount += 7;
             break;
         case 0x0f:  //RRC
             //Rotate right. Bit 0 (rightmost bit) becomes bit 7, and it also becomes cy.
             //A = A >> 1; bit 7 = prev bit 0; CY = prev bit 0
             state->cc.cy = state->a & 0x01; //Get rightmost value in A register.
             state->a = (state->a >> 1) | (state->cc.cy << 7); //Shift A register to the right 1 step, insert previous rightmost value into bit 7.
+            state->cyclecount += 4;
             break;
         case 0x10:  //NOP
             //No op
+            state->cyclecount += 4;
             break;
         case 0x11:  //LXI    D, word
             //Load register pair immediate
@@ -473,6 +490,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->d = opcode[2];
             state->e = opcode[1];
             state->pc += 2;
+            state->cyclecount += 10;
             break;
         case 0x12:  //STAX   D
             //Store accumulator indirect
@@ -481,6 +499,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             uint16_t offset;
             offset = (state->d << 8) | state->e;
             state->memory[offset] = state->a;
+            state->cyclecount += 7;
             }
             break;
         case 0x13:  //INX    D
@@ -490,6 +509,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             if (state->e == 0){
                 state->d++;
             }
+            state->cyclecount += 5;
             break;
         case 0x14:  //INR    D
             //Increment Register
@@ -502,6 +522,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->cc.p = Parity((uint8_t) (result & 0xff));
             state->cc.ac = ((result & 0x0F) < (state->d & 0x0F));
             state->d = result & 0xff;
+            state->cyclecount += 5;
             }
             break;
         case 0x15:  //DCR    D
@@ -515,6 +536,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->cc.p = Parity((uint8_t) (result & 0xff));
             state->cc.ac = ((result & 0x0F) < (state->d & 0x0F));
             state->d = result & 0xff;
+            state->cyclecount += 5;
             }
             break;
         case 0x16:  //MVI    D
@@ -522,6 +544,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             //D <- Byte 2
             state->d = opcode[1];
             state->pc += 1;
+            state->cyclecount += 7;
             break;
         case 0x17:  //RAL
             //Rotate left through carry
@@ -531,10 +554,12 @@ void Emulate8080Op(State8080* state, FILE *output){
             result = (state->a << 1) | state->cc.cy;
             state->cc.cy = (state->a & 0x80) >> 7;
             state->a = result;
+            state->cyclecount += 4;
             }
             break;
         case 0x18:  //NOP
             //No op
+            state->cyclecount += 4;
             break;
         case 0x19:  //DAD    D
             //Add register pair to H and L
@@ -551,6 +576,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->h = (result >> 8) & 0xff;
             state->l = result & 0xff;
             state->cc.cy = (result > 0xffff);
+            state->cyclecount += 10;
             }
             break;
         case 0x1a:  //LDAX   D
@@ -560,6 +586,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             uint16_t offset;
             offset = (state->d << 8) | state->e;
             state->a = state->memory[offset];
+            state->cyclecount += 7;
             }
             break;
         case 0x1b:  //DCX    D
@@ -569,6 +596,7 @@ void Emulate8080Op(State8080* state, FILE *output){
                 state->d--;
             }
             state->e--;
+            state->cyclecount += 5;
             break;
         case 0x1c:  //INR    E
             //Increment Register
@@ -581,6 +609,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->cc.p = Parity((uint8_t) (result & 0xff));
             state->cc.ac = ((result & 0x0F) < (state->e & 0x0F));
             state->e = result & 0xff;
+            state->cyclecount += 5;
             }
             break;
         case 0x1d:  //DCR    E
@@ -594,6 +623,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->cc.p = Parity((uint8_t) (result & 0xff));
             state->cc.ac = ((result & 0x0F) < (state->e & 0x0F));
             state->e = result & 0xff;
+            state->cyclecount += 5;
             }
             break;
         case 0x1e:  //MVI    E
@@ -601,6 +631,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             //E <- Byte 2
             state->e = opcode[1];
             state->pc += 1;
+            state->cyclecount += 7;
             break;
         case 0x1f:  //RAR
             //Rotate right through carry
@@ -610,10 +641,12 @@ void Emulate8080Op(State8080* state, FILE *output){
             result = (state->a >> 1) | (state->cc.cy << 7);
             state->cc.cy = state->a & 0x01;
             state->a = result;
+            state->cyclecount += 4;
             }
             break;
         case 0x20:  //NOP
             //No op
+            state->cyclecount += 4;
             break;
         case 0x21:  //LXI    H, word
             //Load register pair immediate
@@ -621,6 +654,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->h = opcode[2];
             state->l = opcode[1];
             state->pc += 2;
+            state->cyclecount += 10;
             break;
         case 0x22:  //SHLD   adr
             //Store H and L direct
@@ -631,6 +665,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->memory[offset] = state->l;
             state->memory[offset + 1] = state->h;
             state->pc += 2;
+            state->cyclecount += 16;
             }
             break;
         case 0x23:  //INX    H
@@ -640,6 +675,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             if (state->l == 0){
                 state->h++;
             }
+            state->cyclecount += 5;
             break;
         case 0x24:  //INR    H
             //Increment Register
@@ -652,6 +688,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->cc.p = Parity((uint8_t) (result & 0xff));
             state->cc.ac = ((result & 0x0F) < (state->h & 0x0F));
             state->h = result & 0xff;
+            state->cyclecount += 5;
             }
             break;
         case 0x25:  //DCR    H
@@ -665,6 +702,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->cc.p = Parity((uint8_t) (result & 0xff));
             state->cc.ac = ((result & 0x0F) < (state->h & 0x0F));
             state->h = result & 0xff;
+            state->cyclecount += 5;
             }
             break;
         case 0x26:  //MVI    H
@@ -672,6 +710,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             //H <- Byte 2
             state->h = opcode[1];
             state->pc += 1;
+            state->cyclecount += 7;
             break;
         case 0x27:  //DAA
             //Decimal Adjust Accumulator
@@ -696,9 +735,11 @@ void Emulate8080Op(State8080* state, FILE *output){
             }
             state->a = result;
             }
+            state->cyclecount += 4;
             break;
         case 0x28:  //NOP
             //No op
+            state->cyclecount += 4;
             break;
         case 0x29:  //DAD    H
             //Add register pair to H and L
@@ -715,6 +756,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->h = (result >> 8) & 0xff;
             state->l = result & 0xff;
             state->cc.cy = (result > 0xffff);
+            state->cyclecount += 10;
             }
             break;
         case 0x2a:  //LHLD   adr
@@ -726,6 +768,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->l = state->memory[offset];
             state->h = state->memory[offset + 1];
             state->pc += 2;
+            state->cyclecount += 16;
             }
             break;
         case 0x2b:  //DCX    H
@@ -735,6 +778,7 @@ void Emulate8080Op(State8080* state, FILE *output){
                 state->h--;
             }
             state->l--;
+            state->cyclecount += 5;
             break;
         case 0x2c:  //INR    L
             //Increment Register
@@ -747,6 +791,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->cc.p = Parity((uint8_t) (result & 0xff));
             state->cc.ac = ((result & 0x0F) < (state->l & 0x0F));
             state->l = result & 0xff;
+            state->cyclecount += 5;
             }
             break;
         case 0x2d:  //DCR    L
@@ -760,6 +805,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->cc.p = Parity((uint8_t) (result & 0xff));
             state->cc.ac = ((result & 0x0F) < (state->l & 0x0F));
             state->l = result & 0xff;
+            state->cyclecount += 5;
             }
             break;
         case 0x2e:  //MVI    L
@@ -767,14 +813,17 @@ void Emulate8080Op(State8080* state, FILE *output){
             //L <- Byte 2
             state->l = opcode[1];
             state->pc += 1;
+            state->cyclecount += 7;
             break;
         case 0x2f:  //CMA
             //Complement accumulator
             //A <- !A
             state->a = ~(state->a);
+            state->cyclecount += 4;
             break;
         case 0x30:  //NOP
             //No op
+            state->cyclecount += 4;
             break;
         case 0x31:  //LXI    SP, word
             //Load register pair immediate
@@ -782,6 +831,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->sp = opcode[2];
             state->sp = (state->sp << 8) | opcode[1];
             state->pc += 2;
+            state->cyclecount += 10;
             break;
         case 0x32:  //STA    adr
             //Store Accumulator direct
@@ -791,12 +841,14 @@ void Emulate8080Op(State8080* state, FILE *output){
             offset = (opcode[2] << 8) | opcode[1];
             state->memory[offset] = state->a;
             state->pc += 2;
+            state->cyclecount += 13;
             }
             break;
         case 0x33:  //INX    SP
             //Increment register pair
             //SP <- SP + 1.
             state->sp++;
+            state->cyclecount += 5;
             break;
         case 0x34:  //INR    M
             //Increment memory
@@ -811,6 +863,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->cc.p = Parity((uint8_t) (result & 0xff));
             state->cc.ac = ((result & 0x0F) < (state->memory[offset] & 0x0F));
             state->memory[offset] = result & 0xff;
+            state->cyclecount += 10;
             }
             break;
         case 0x35:  //DCR    M
@@ -826,6 +879,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->cc.p = Parity((uint8_t) (result & 0xff));
             state->cc.ac = ((result & 0x0F) < (state->memory[offset] & 0x0F));
             state->memory[offset] = result & 0xff;
+            state->cyclecount += 10;
             }
             break;
         case 0x36:  //MVI    M
@@ -836,15 +890,18 @@ void Emulate8080Op(State8080* state, FILE *output){
             offset = (state->h << 8) | state->l;
             state->memory[offset] = opcode[1];
             state->pc += 1;
+            state->cyclecount += 10;
             }
             break;
         case 0x37:  //STC
             //Set carry
             //CY = 1
             state->cc.cy = 0x01;
+            state->cyclecount += 4;
             break;
         case 0x38:  //NOP
             //No op
+            state->cyclecount += 4;
             break;
         case 0x39:  //DAD    SP
             //Add register pair to H and L
@@ -859,6 +916,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->h = (result >> 8) & 0xff;
             state->l = result & 0xff;
             state->cc.cy = (result > 0xffff);
+            state->cyclecount += 10;
             }
             break;
         case 0x3a:  //LDA    adr
@@ -869,12 +927,14 @@ void Emulate8080Op(State8080* state, FILE *output){
             offset = (opcode[2] << 8) | opcode[1];
             state->a = state->memory[offset];
             state->pc += 2;
+            state->cyclecount += 13;
             }
             break;
         case 0x3b:  //DCX    SP
             //Decrement register pair
             //SP = SP - 1.
             state->sp--;
+            state->cyclecount += 5;
             break;
         case 0x3c:  //INR    A
             //Increment Register
@@ -887,6 +947,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->cc.p = Parity((uint8_t) (result & 0xff));
             state->cc.ac = ((result & 0x0F) < (state->a & 0x0F));
             state->a = result & 0xff;
+            state->cyclecount += 5;
             }
             break;
         case 0x3d:  //DCR    A
@@ -900,6 +961,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->cc.p = Parity((uint8_t) (result & 0xff));
             state->cc.ac = ((result & 0x0F) < (state->a & 0x0F));
             state->a = result & 0xff;
+            state->cyclecount += 5;
             }
             break;
         case 0x3e:  //MVI    A
@@ -907,40 +969,48 @@ void Emulate8080Op(State8080* state, FILE *output){
             //A <- Byte 2
             state->a = opcode[1];
             state->pc += 1;
+            state->cyclecount += 7;
             break;
         case 0x3f:  //CMC
             //Complement carry
             state->cc.cy = ~(state->cc.cy);
+            state->cyclecount += 4;
             break;
         case 0x40:  //MOV    B,B
             //Move Register
             //B <- B
             state->b = state->b;
+            state->cyclecount += 5;
             break;
         case 0x41:  //MOV    B,C
             //Move Register
             //B <- C
             state->b = state->c;
+            state->cyclecount += 5;
             break;
         case 0x42:  //MOV    B,D
             //Move Register
             //B <- D
             state->b = state->d;
+            state->cyclecount += 5;
             break;
         case 0x43:  //MOV    B,E
             //Move Register
             //B <- E
             state->b = state->e;
+            state->cyclecount += 5;
             break;
         case 0x44:  //MOV    B,H
             //Move Register
             //B <- H
             state->b = state->h;
+            state->cyclecount += 5;
             break;
         case 0x45:  //MOV    B,L
             //Move Register
             //B <- L
             state->b = state->l;
+            state->cyclecount += 5;
             break;
         case 0x46:  //MOV    B,M
             //Move from memory
@@ -949,42 +1019,50 @@ void Emulate8080Op(State8080* state, FILE *output){
             uint16_t offset;
             offset = (state->h << 8) | state->l;
             state->b = state->memory[offset];
+            state->cyclecount += 7;
             }
             break;
         case 0x47:  //MOV    B,A
             //Move Register
             //B <- A
             state->b = state->a;
+            state->cyclecount += 5;
             break;
         case 0x48:  //MOV    C,B
             //Move Register
             //C <- B
             state->c = state->b;
+            state->cyclecount += 5;
             break;
         case 0x49:  //MOV    C,C
             //Move Register
             //C <- C
             state->c = state->c;
+            state->cyclecount += 5;
             break;
         case 0x4a:  //MOV    C,D
             //Move Register
             //C <- D
             state->c = state->d;
+            state->cyclecount += 5;
             break;
         case 0x4b:  //MOV    C,E
             //Move Register
             //C <- E
             state->c = state->e;
+            state->cyclecount += 5;
             break;
         case 0x4c:  //MOV    C,H
             //Move Register
             //C <- H
             state->c = state->h;
+            state->cyclecount += 5;
             break;
         case 0x4d:  //MOV    C,L
             //Move Register
             //C <- L
             state->c = state->l;
+            state->cyclecount += 5;
             break;
         case 0x4e:  //MOV    C,M
             //Move from memory
@@ -993,42 +1071,50 @@ void Emulate8080Op(State8080* state, FILE *output){
             uint16_t offset;
             offset = (state->h << 8) | state->l;
             state->c = state->memory[offset];
+            state->cyclecount += 7;
             }
             break;
         case 0x4f:  //MOV    C,A
             //Move Register
             //C <- A
             state->c = state->a;
+            state->cyclecount += 5;
             break;
         case 0x50:  //MOV    D,B
             //Move Register
             //D <- B
             state->d = state->b;
+            state->cyclecount += 5;
             break;
         case 0x51:  //MOV    D,C
             //Move Register
             //D <- C
             state->d = state->c;
+            state->cyclecount += 5;
             break;
         case 0x52:  //MOV    D,D
             //Move Register
             //D <- D
             state->d = state->d;
+            state->cyclecount += 5;
             break;
         case 0x53:  //MOV    D,E
             //Move Register
             //D <- E
             state->d = state->e;
+            state->cyclecount += 5;
             break;
         case 0x54:  //MOV    D,H
             //Move Register
             //D <- H
             state->d = state->h;
+            state->cyclecount += 5;
             break;
         case 0x55:  //MOV    D,L
             //Move Register
             //D <- L
             state->d = state->l;
+            state->cyclecount += 5;
             break;
         case 0x56:  //MOV    D,M
             //Move from memory
@@ -1037,42 +1123,50 @@ void Emulate8080Op(State8080* state, FILE *output){
             uint16_t offset;
             offset = (state->h << 8) | state->l;
             state->d = state->memory[offset];
+            state->cyclecount += 7;
             }
             break;
         case 0x57:  //MOV    D,A
             //Move Register
             //D <- A
             state->d = state->a;
+            state->cyclecount += 5;
             break;
         case 0x58:  //MOV    E,B
             //Move Register
             //E <- B
             state->e = state->b;
+            state->cyclecount += 5;
             break;
         case 0x59:  //MOV    E,C
             //Move Register
             //E <- C
             state->e = state->c;
+            state->cyclecount += 5;
             break;
         case 0x5a:  //MOV    E,D
             //Move Register
             //E <- D
             state->e = state->d;
+            state->cyclecount += 5;
             break;
         case 0x5b:  //MOV    E,E
             //Move Register
             //E <- E
             state->e = state->e;
+            state->cyclecount += 5;
             break;
         case 0x5c:  //MOV    E,H
             //Move Register
             //E <- H
             state->e = state->h;
+            state->cyclecount += 5;
             break;
         case 0x5d:  //MOV    E,L
             //Move Register
             //E <- L
             state->e = state->l;
+            state->cyclecount += 5;
             break;
         case 0x5e:  //MOV    E,M
             //Move from memory
@@ -1081,42 +1175,50 @@ void Emulate8080Op(State8080* state, FILE *output){
             uint16_t offset;
             offset = (state->h << 8) | state->l;
             state->e = state->memory[offset];
+            state->cyclecount += 7;
             }
             break;
         case 0x5f:  //MOV    E,A
             //Move Register
             //E <- A
             state->e = state->a;
+            state->cyclecount += 5;
             break;
         case 0x60:  //MOV    H,B
             //Move Register
             //H <- B
             state->h = state->b;
+            state->cyclecount += 5;
             break;
         case 0x61:  //MOV    H,C
             //Move Register
             //H <- C
             state->h = state->c;
+            state->cyclecount += 5;
             break;
         case 0x62:  //MOV    H,D
             //Move Register
             //H <- D
             state->h = state->d;
+            state->cyclecount += 5;
             break;
         case 0x63:  //MOV    H,E
             //Move Register
             //H <- E
             state->h = state->e;
+            state->cyclecount += 5;
             break;
         case 0x64:  //MOV    H,H
             //Move Register
             //H <- H
             state->h = state->h;
+            state->cyclecount += 5;
             break;
         case 0x65:  //MOV    H,L
             //Move Register
             //H <- L
             state->h = state->l;
+            state->cyclecount += 5;
             break;
         case 0x66:  //MOV    H,M
             //Move from memory
@@ -1125,42 +1227,50 @@ void Emulate8080Op(State8080* state, FILE *output){
             uint16_t offset;
             offset = (state->h << 8) | state->l;
             state->h = state->memory[offset];
+            state->cyclecount += 7;
             }
             break;
         case 0x67:  //MOV    H,A
             //Move Register
             //H <- A
             state->h = state->a;
+            state->cyclecount += 5;
             break;
         case 0x68:  //MOV    L,B
             //Move Register
             //L <- B
             state->l = state->b;
+            state->cyclecount += 5;
             break;
         case 0x69:  //MOV    L,C
             //Move Register
             //L <- C
             state->l = state->c;
+            state->cyclecount += 5;
             break;
         case 0x6a:  //MOV    L,D
             //Move Register
             //L <- D
             state->l = state->d;
+            state->cyclecount += 5;
             break;
         case 0x6b:  //MOV    L,E
             //Move Register
             //L <- E
             state->l = state->e;
+            state->cyclecount += 5;
             break;
         case 0x6c:  //MOV    L,H
             //Move Register
             //L <- H
             state->l = state->h;
+            state->cyclecount += 5;
             break;
         case 0x6d:  //MOV    L,L
             //Move Register
             //L <- L
             state->l = state->l;
+            state->cyclecount += 5;
             break;
         case 0x6e:  //MOV    L,M
             //Move from memory
@@ -1169,12 +1279,14 @@ void Emulate8080Op(State8080* state, FILE *output){
             uint16_t offset;
             offset = (state->h << 8) | state->l;
             state->l = state->memory[offset];
+            state->cyclecount += 7;
             }
             break;
         case 0x6f:  //MOV    L,A
             //Move Register
             //L <- A
             state->l = state->a;
+            state->cyclecount += 5;
             break;
         case 0x70:  //MOV    M,B
             //Move Register
@@ -1183,6 +1295,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             uint16_t offset;
             offset = (state->h << 8) | state->l;
             state->memory[offset] = state->b;
+            state->cyclecount += 7;
             }
             break;
         case 0x71:  //MOV    M,C
@@ -1192,6 +1305,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             uint16_t offset;
             offset = (state->h << 8) | state->l;
             state->memory[offset] = state->c;
+            state->cyclecount += 7;
             }
             break;
         case 0x72:  //MOV    M,D
@@ -1201,6 +1315,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             uint16_t offset;
             offset = (state->h << 8) | state->l;
             state->memory[offset] = state->d;
+            state->cyclecount += 7;
             }
             break;
         case 0x73:  //MOV    M,E
@@ -1210,6 +1325,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             uint16_t offset;
             offset = (state->h << 8) | state->l;
             state->memory[offset] = state->e;
+            state->cyclecount += 7;
             }
             break;
         case 0x74:  //MOV    M,H
@@ -1219,6 +1335,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             uint16_t offset;
             offset = (state->h << 8) | state->l;
             state->memory[offset] = state->h;
+            state->cyclecount += 7;
             }
             break;
         case 0x75:  //MOV    M,L
@@ -1228,10 +1345,12 @@ void Emulate8080Op(State8080* state, FILE *output){
             uint16_t offset;
             offset = (state->h << 8) | state->l;
             state->memory[offset] = state->l;
+            state->cyclecount += 7;
             }
             break;
         case 0x76:  //HLT
             //exit(0);
+            state->cyclecount += 7;
             break;
         case 0x77:  //MOV    M,A
             //Move Register
@@ -1240,37 +1359,44 @@ void Emulate8080Op(State8080* state, FILE *output){
             uint16_t offset;
             offset = (state->h << 8) | state->l;
             state->memory[offset] = state->a;
+            state->cyclecount += 7;
             }
             break;
         case 0x78:  //MOV    A,B
             //Move Register
             //A <- B
             state->a = state->b;
+            state->cyclecount += 5;
             break;
         case 0x79:  //MOV    A,C
             //Move Register
             //A <- C
             state->a = state->c;
+            state->cyclecount += 5;
             break;
         case 0x7a:  //MOV    A,D
             //Move Register
             //A <- D
             state->a = state->d;
+            state->cyclecount += 5;
             break;
         case 0x7b:  //MOV    A,E
             //Move Register
             //A <- E
             state->a = state->e;
+            state->cyclecount += 5;
             break;
         case 0x7c:  //MOV    A,H
             //Move Register
             //A <- H
             state->a = state->h;
+            state->cyclecount += 5;
             break;
         case 0x7d:  //MOV    A,L
             //Move Register
             //A <- L
             state->a = state->l;
+            state->cyclecount += 5;
             break;
         case 0x7e:  //MOV    A,M
             //Move from memory
@@ -1279,12 +1405,14 @@ void Emulate8080Op(State8080* state, FILE *output){
             uint16_t offset;
             offset = (state->h << 8) | state->l;
             state->a = state->memory[offset];
+            state->cyclecount += 7;
             }
             break;
         case 0x7f:  //MOV    A,A
             //Move Register
             //A <- A
             state->a = state->a;
+            state->cyclecount += 5;
             break;
         case 0x80:  //ADD    B
             //Add Register
@@ -1298,6 +1426,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->cc.ac = ((((state->b ^ state->a) & 0x10) ^ (result & 0x10)) >> 4);
             state->cc.cy = (result > 0xff);
             state->a = result & 0xff;
+            state->cyclecount += 4;
             }
             break;
         case 0x81:  //ADD    C
@@ -1312,6 +1441,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->cc.ac = ((((state->c ^ state->a) & 0x10) ^ (result & 0x10)) >> 4);
             state->cc.cy = (result > 0xff);
             state->a = result & 0xff;
+            state->cyclecount += 4;
             }
             break;
         case 0x82:  //ADD    D
@@ -1326,6 +1456,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->cc.ac = ((((state->d ^ state->a) & 0x10) ^ (result & 0x10)) >> 4);
             state->cc.cy = (result > 0xff);
             state->a = result & 0xff;
+            state->cyclecount += 4;
             }
             break;
         case 0x83:  //ADD    E
@@ -1340,6 +1471,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->cc.ac = ((((state->e ^ state->a) & 0x10) ^ (result & 0x10)) >> 4);
             state->cc.cy = (result > 0xff);
             state->a = result & 0xff;
+            state->cyclecount += 4;
             }
             break;
         case 0x84:  //ADD    H
@@ -1354,6 +1486,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->cc.ac = ((((state->h ^ state->a) & 0x10) ^ (result & 0x10)) >> 4);
             state->cc.cy = (result > 0xff);
             state->a = result & 0xff;
+            state->cyclecount += 4;
             }
             break;
         case 0x85:  //ADD    L
@@ -1368,6 +1501,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->cc.ac = ((((state->l ^ state->a) & 0x10) ^ (result & 0x10)) >> 4);
             state->cc.cy = (result > 0xff);
             state->a = result & 0xff;
+            state->cyclecount += 4;
             }
             break;
         case 0x86:  //ADD    M
@@ -1384,6 +1518,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->cc.ac = ((((state->memory[offset] ^ state->a) & 0x10) ^ (result & 0x10)) >> 4);
             state->cc.cy = (result > 0xff);
             state->a = result & 0xff;
+            state->cyclecount += 7;
             }
             break;
         case 0x87:  //ADD    A
@@ -1398,6 +1533,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->cc.ac = ((((state->a ^ state->a) & 0x10) ^ (result & 0x10)) >> 4);
             state->cc.cy = (result > 0xff);
             state->a = result & 0xff;
+            state->cyclecount += 4;
             }
             break;
         case 0x88:  //ADC    B
@@ -1412,6 +1548,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->cc.ac = ((((state->b ^ state->a) & 0x10) ^ (result & 0x10)) >> 4);
             state->cc.cy = (result > 0xff);
             state->a = result & 0xff;
+            state->cyclecount += 4;
             }
             break;
         case 0x89:  //ADC    C
@@ -1426,6 +1563,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->cc.ac = ((((state->c ^ state->a) & 0x10) ^ (result & 0x10)) >> 4);
             state->cc.cy = (result > 0xff);
             state->a = result & 0xff;
+            state->cyclecount += 4;
             }
             break;
         case 0x8a:  //ADC    D
@@ -1440,6 +1578,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->cc.ac = ((((state->d ^ state->a) & 0x10) ^ (result & 0x10)) >> 4);
             state->cc.cy = (result > 0xff);
             state->a = result & 0xff;
+            state->cyclecount += 4;
             }
             break;
         case 0x8b:  //ADC    E
@@ -1454,6 +1593,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->cc.ac = ((((state->e ^ state->a) & 0x10) ^ (result & 0x10)) >> 4);
             state->cc.cy = (result > 0xff);
             state->a = result & 0xff;
+            state->cyclecount += 4;
             }
             break;
         case 0x8c:  //ADC    H
@@ -1468,6 +1608,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->cc.ac = ((((state->h ^ state->a) & 0x10) ^ (result & 0x10)) >> 4);
             state->cc.cy = (result > 0xff);
             state->a = result & 0xff;
+            state->cyclecount += 4;
             }
             break;
         case 0x8d:  //ADC    L
@@ -1482,6 +1623,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->cc.ac = ((((state->l ^ state->a) & 0x10) ^ (result & 0x10)) >> 4);
             state->cc.cy = (result > 0xff);
             state->a = result & 0xff;
+            state->cyclecount += 4;
             }
             break;
         case 0x8e:  //ADC    M
@@ -1498,6 +1640,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->cc.ac = ((((state->memory[offset] ^ state->a) & 0x10) ^ (result & 0x10)) >> 4);
             state->cc.cy = (result > 0xff);
             state->a = result & 0xff;
+            state->cyclecount += 7;
             }
             break;
         case 0x8f:  //ADC    A
@@ -1512,6 +1655,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->cc.ac = ((((state->a ^ state->a) & 0x10) ^ (result & 0x10)) >> 4);
             state->cc.cy = (result > 0xff);
             state->a = result & 0xff;
+            state->cyclecount += 4;
             }
             break;
         case 0x90:  //SUB    B
@@ -1526,6 +1670,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->cc.ac = (~(((state->b ^ state->a) & 0x10) ^ (result & 0x10)) >> 4);
             state->cc.cy = (result > 0xff);
             state->a = result & 0xff;
+            state->cyclecount += 4;
             }
             break;
         case 0x91:  //SUB    C
@@ -1540,6 +1685,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->cc.ac = (~(((state->c ^ state->a) & 0x10) ^ (result & 0x10)) >> 4);
             state->cc.cy = (result > 0xff);
             state->a = result & 0xff;
+            state->cyclecount += 4;
             }
             break;
         case 0x92:  //SUB    D
@@ -1554,6 +1700,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->cc.ac = (~(((state->d ^ state->a) & 0x10) ^ (result & 0x10)) >> 4);
             state->cc.cy = (result > 0xff);
             state->a = result & 0xff;
+            state->cyclecount += 4;
             }
             break;
         case 0x93:  //SUB    E
@@ -1568,6 +1715,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->cc.ac = (~(((state->e ^ state->a) & 0x10) ^ (result & 0x10)) >> 4);
             state->cc.cy = (result > 0xff);
             state->a = result & 0xff;
+            state->cyclecount += 4;
             }
             break;
         case 0x94:  //SUB    H
@@ -1582,6 +1730,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->cc.ac = (~(((state->h ^ state->a) & 0x10) ^ (result & 0x10)) >> 4);
             state->cc.cy = (result > 0xff);
             state->a = result & 0xff;
+            state->cyclecount += 4;
             }
             break;
         case 0x95:  //SUB    L
@@ -1596,6 +1745,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->cc.ac = (~(((state->l ^ state->a) & 0x10) ^ (result & 0x10)) >> 4);
             state->cc.cy = (result > 0xff);
             state->a = result & 0xff;
+            state->cyclecount += 4;
             }
             break;
         case 0x96:  //SUB    M
@@ -1612,6 +1762,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->cc.ac = (~(((state->memory[offset] ^ state->a) & 0x10) ^ (result & 0x10)) >> 4);
             state->cc.cy = (result > 0xff);
             state->a = result & 0xff;
+            state->cyclecount += 7;
             }
             break;
         case 0x97:  //SUB    A
@@ -1626,6 +1777,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->cc.ac = (~(((state->a ^ state->a) & 0x10) ^ (result & 0x10)) >> 4);
             state->cc.cy = (result > 0xff);
             state->a = result & 0xff;
+            state->cyclecount += 4;
             }
             break;
         case 0x98:  //SBB    B
@@ -1640,6 +1792,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->cc.ac = (~(((state->b ^ state->a) & 0x10) ^ (result & 0x10)) >> 4);
             state->cc.cy = (result > 0xff);
             state->a = result & 0xff;
+            state->cyclecount += 4;
             }
             break;
         case 0x99:  //SBB    C
@@ -1654,6 +1807,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->cc.ac = (~(((state->c ^ state->a) & 0x10) ^ (result & 0x10)) >> 4);
             state->cc.cy = (result > 0xff);
             state->a = result & 0xff;
+            state->cyclecount += 4;
             }
             break;
         case 0x9a:  //SBB    D
@@ -1668,6 +1822,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->cc.ac = (~(((state->d ^ state->a) & 0x10) ^ (result & 0x10)) >> 4);
             state->cc.cy = (result > 0xff);
             state->a = result & 0xff;
+            state->cyclecount += 4;
             }
             break;
         case 0x9b:  //SBB    E
@@ -1682,6 +1837,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->cc.ac = (~(((state->e ^ state->a) & 0x10) ^ (result & 0x10)) >> 4);
             state->cc.cy = (result > 0xff);
             state->a = result & 0xff;
+            state->cyclecount += 4;
             }
             break;
         case 0x9c:  //SBB    H
@@ -1696,6 +1852,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->cc.ac = (~(((state->h ^ state->a) & 0x10) ^ (result & 0x10)) >> 4);
             state->cc.cy = (result > 0xff);
             state->a = result & 0xff;
+            state->cyclecount += 4;
             }
             break;
         case 0x9d:  //SBB    L
@@ -1710,6 +1867,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->cc.ac = (~(((state->l ^ state->a) & 0x10) ^ (result & 0x10)) >> 4);
             state->cc.cy = (result > 0xff);
             state->a = result & 0xff;
+            state->cyclecount += 4;
             }
             break;
         case 0x9e:  //SBB    M
@@ -1726,6 +1884,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->cc.ac = (~(((state->memory[offset] ^ state->a) & 0x10) ^ (result & 0x10)) >> 4);
             state->cc.cy = (result > 0xff);
             state->a = result & 0xff;
+            state->cyclecount += 7;
             }
             break;
         case 0x9f:  //SBB    A
@@ -1740,6 +1899,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->cc.ac = (~(((state->a ^ state->a) & 0x10) ^ (result & 0x10)) >> 4);
             state->cc.cy = (result > 0xff);
             state->a = result & 0xff;
+            state->cyclecount += 4;
             }
             break;
         case 0xa0:  //ANA    B
@@ -1754,6 +1914,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->cc.cy = 0x0;
             state->cc.ac = ((state->a & 0x8) | (state->b & 0x8)) >> 3; //ac is set to the logical OR of bit 3 of the values in operation. In this case, the OR of bit 3 (0000 1000) in A & B
             state->a = result & 0xff;
+            state->cyclecount += 4;
             }
             break;
         case 0xa1:  //ANA    C
@@ -1768,6 +1929,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->cc.cy = 0x0;
             state->cc.ac = ((state->a & 0x8) | (state->c & 0x8)) >> 3;
             state->a = result & 0xff;
+            state->cyclecount += 4;
             }
             break;
         case 0xa2:  //ANA    D
@@ -1782,6 +1944,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->cc.cy = 0x0;
             state->cc.ac = ((state->a & 0x8) | (state->d & 0x8)) >> 3;
             state->a = result & 0xff;
+            state->cyclecount += 4;
             }
             break;
         case 0xa3:  //ANA    E
@@ -1796,6 +1959,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->cc.cy = 0x0;
             state->cc.ac = ((state->a & 0x8) | (state->e & 0x8)) >> 3;
             state->a = result & 0xff;
+            state->cyclecount += 4;
             }
             break;
         case 0xa4:  //ANA    H
@@ -1810,6 +1974,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->cc.cy = 0x0;
             state->cc.ac = ((state->a & 0x8) | (state->h & 0x8)) >> 3;
             state->a = result & 0xff;
+            state->cyclecount += 4;
             }
             break;
         case 0xa5:  //ANA    L
@@ -1824,6 +1989,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->cc.cy = 0x0;
             state->cc.ac = ((state->a & 0x8) | (state->l & 0x8)) >> 3;
             state->a = result & 0xff;
+            state->cyclecount += 4;
             }
             break;
         case 0xa6:  //ANA    M
@@ -1840,6 +2006,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->cc.cy = 0x0;
             state->cc.ac = ((state->a & 0x8) | (state->memory[offset] & 0x8)) >> 3;
             state->a = result & 0xff;
+            state->cyclecount += 7;
             }
             break;
         case 0xa7:  //ANA    A
@@ -1854,6 +2021,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->cc.cy = 0x0;
             state->cc.ac = ((state->a & 0x8) | (state->a & 0x8)) >> 3;
             state->a = result & 0xff;
+            state->cyclecount += 4;
             }
             break;
         case 0xa8:  //XRA    B
@@ -1868,6 +2036,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->cc.cy = 0x0;
             state->cc.ac = 0x0; //Cleared according to the user's manual.
             state->a = result & 0xff;
+            state->cyclecount += 4;
             }
             break;
         case 0xa9:  //XRA    C
@@ -1882,6 +2051,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->cc.cy = 0x0;
             state->cc.ac = 0x0;
             state->a = result & 0xff;
+            state->cyclecount += 4;
             }
             break;
         case 0xaa:  //XRA    D
@@ -1896,6 +2066,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->cc.cy = 0x0;
             state->cc.ac = 0x0;
             state->a = result & 0xff;
+            state->cyclecount += 4;
             }
             break;
         case 0xab:  //XRA    E
@@ -1910,6 +2081,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->cc.cy = 0x0;
             state->cc.ac = 0x0;
             state->a = result & 0xff;
+            state->cyclecount += 4;
             }
             break;
         case 0xac:  //XRA    H
@@ -1924,6 +2096,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->cc.cy = 0x0;
             state->cc.ac = 0x0;
             state->a = result & 0xff;
+            state->cyclecount += 4;
             }
             break;
         case 0xad:  //XRA    L
@@ -1938,6 +2111,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->cc.cy = 0x0;
             state->cc.ac = 0x0;
             state->a = result & 0xff;
+            state->cyclecount += 4;
             }
             break;
         case 0xae:  //XRA    M
@@ -1954,6 +2128,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->cc.cy = 0x0;
             state->cc.ac = 0x0;
             state->a = result & 0xff;
+            state->cyclecount += 7;
             }
             break;
         case 0xaf:  //XRA    A
@@ -1968,6 +2143,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->cc.cy = 0x0;
             state->cc.ac = 0x0;
             state->a = result & 0xff;
+            state->cyclecount += 4;
             }
             break;
         case 0xb0:  //ORA    B
@@ -1982,6 +2158,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->cc.cy = 0x0;
             state->cc.ac = 0x0;
             state->a = result & 0xff;
+            state->cyclecount += 4;
             }
             break;
         case 0xb1:  //ORA    C
@@ -1996,6 +2173,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->cc.cy = 0x0;
             state->cc.ac = 0x0;
             state->a = result & 0xff;
+            state->cyclecount += 4;
             }
             break;
         case 0xb2:  //ORA    D
@@ -2010,6 +2188,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->cc.cy = 0x0;
             state->cc.ac = 0x0;
             state->a = result & 0xff;
+            state->cyclecount += 4;
             }
             break;
         case 0xb3:  //ORA    E
@@ -2024,6 +2203,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->cc.cy = 0x0;
             state->cc.ac = 0x0;
             state->a = result & 0xff;
+            state->cyclecount += 4;
             }
             break;
         case 0xb4:  //ORA    H
@@ -2038,6 +2218,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->cc.cy = 0x0;
             state->cc.ac = 0x0;
             state->a = result & 0xff;
+            state->cyclecount += 4;
             }
             break;
         case 0xb5:  //ORA    L
@@ -2052,6 +2233,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->cc.cy = 0x0;
             state->cc.ac = 0x0;
             state->a = result & 0xff;
+            state->cyclecount += 4;
             }
             break;
         case 0xb6:  //ORA    M
@@ -2068,6 +2250,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->cc.cy = 0x0;
             state->cc.ac = 0x0;
             state->a = result & 0xff;
+            state->cyclecount += 7;
             }
             break;
         case 0xb7:  //ORA    A
@@ -2082,6 +2265,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->cc.cy = 0x0;
             state->cc.ac = 0x0;
             state->a = result & 0xff;
+            state->cyclecount += 4;
             }
             break;
         case 0xb8:  //CMP    B
@@ -2095,6 +2279,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->cc.p = Parity((uint8_t) (result & 0xff));
             state->cc.ac = (~(((state->b ^ state->a) & 0x10) ^ (result & 0x10)) >> 4);
             state->cc.cy = (result > 0xff); //If (A - B) > 0xff, then a was less than b (since it loops around, starting at 0xFFFF and going down). Neither A nor B can be larger than 0xff. Same logic as in other commands higher up in this file.
+            state->cyclecount += 4;
             }
             break;
         case 0xb9:  //CMP    C
@@ -2108,6 +2293,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->cc.p = Parity((uint8_t) (result & 0xff));
             state->cc.ac = (~(((state->c ^ state->a) & 0x10) ^ (result & 0x10)) >> 4);
             state->cc.cy = (result > 0xff);
+            state->cyclecount += 4;
             }
             break;
         case 0xba:  //CMP    D
@@ -2121,6 +2307,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->cc.p = Parity((uint8_t) (result & 0xff));
             state->cc.ac = (~(((state->d ^ state->a) & 0x10) ^ (result & 0x10)) >> 4);
             state->cc.cy = (result > 0xff);
+            state->cyclecount += 4;
             }
             break;
         case 0xbb:  //CMP    E
@@ -2134,6 +2321,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->cc.p = Parity((uint8_t) (result & 0xff));
             state->cc.ac = (~(((state->e ^ state->a) & 0x10) ^ (result & 0x10)) >> 4);
             state->cc.cy = (result > 0xff);
+            state->cyclecount += 4;
             }
             break;
         case 0xbc:  //CMP    H
@@ -2147,6 +2335,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->cc.p = Parity((uint8_t) (result & 0xff));
             state->cc.ac = (~(((state->h ^ state->a) & 0x10) ^ (result & 0x10)) >> 4);
             state->cc.cy = (result > 0xff);
+            state->cyclecount += 4;
             }
             break;
         case 0xbd:  //CMP    L
@@ -2160,6 +2349,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->cc.p = Parity((uint8_t) (result & 0xff));
             state->cc.ac = (~(((state->l ^ state->a) & 0x10) ^ (result & 0x10)) >> 4);
             state->cc.cy = (result > 0xff);
+            state->cyclecount += 4;
             }
             break;
         case 0xbe:  //CMP    M
@@ -2175,6 +2365,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->cc.p = Parity((uint8_t) (result & 0xff));
             state->cc.ac = (~(((state->memory[offset] ^ state->a) & 0x10) ^ (result & 0x10)) >> 4);
             state->cc.cy = (result > 0xff);
+            state->cyclecount += 7;
             }
             break;
         case 0xbf:  //CMP    A
@@ -2188,6 +2379,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->cc.p = Parity((uint8_t) (result & 0xff));
             state->cc.ac = (~(((state->a ^ state->a) & 0x10) ^ (result & 0x10)) >> 4);
             state->cc.cy = (result > 0xff);
+            state->cyclecount += 4;
             }
             break;
         case 0xc0:  //RNZ
@@ -2198,6 +2390,10 @@ void Emulate8080Op(State8080* state, FILE *output){
             //(SP) <- (SP) + 2
             if (state->cc.z == 0){
                 Return(state);
+                state->cyclecount++;
+            }
+            else{
+                state->cyclecount += 5;
             }
             break;
         case 0xc1:  //POP    B
@@ -2214,6 +2410,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             }
             else{
                 state->pc += 2;
+                state->cyclecount += 10;
             }
             break;
         case 0xc3:  //JMP    D16
@@ -2228,6 +2425,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             }
             else{
                 state->pc += 2;
+                state->cyclecount += 11;
             }
             break;
         case 0xc5:  //PUSH    B
@@ -2250,6 +2448,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->cc.cy = (result > 0xff);
             state->a = result & 0xff;
             state->pc += 1;
+            state->cyclecount += 7;
             }
             break;
         case 0xc7:  //RST    0
@@ -2261,6 +2460,10 @@ void Emulate8080Op(State8080* state, FILE *output){
             //If Z, RET:
             if (state->cc.z == 1){
                 Return(state);
+                state->cyclecount++;
+            }
+            else{
+                state->cyclecount += 5;
             }
             break;
         case 0xc9:  //RET
@@ -2277,6 +2480,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             }
             else{
                 state->pc += 2;
+                state->cyclecount += 10;
             }
             break;
         case 0xcb:  //JMP    D16
@@ -2291,6 +2495,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             }
             else{
                 state->pc += 2;
+                state->cyclecount += 11;
             }
             break;
         case 0xcd:  //CALL   D16
@@ -2314,6 +2519,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->cc.cy = (result > 0xff);
             state->a = result & 0xff;
             state->pc += 1;
+            state->cyclecount += 7;
             }
             break;
         case 0xcf:  //RST    1
@@ -2325,6 +2531,10 @@ void Emulate8080Op(State8080* state, FILE *output){
             //If NCY, RET:
             if (state->cc.cy == 0){
                 Return(state);
+                state->cyclecount++;
+            }
+            else{
+                state->cyclecount += 5;
             }
             break;
         case 0xd1:  //POP    D
@@ -2341,6 +2551,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             }
             else{
                 state->pc += 2;
+                state->cyclecount += 10;
             }
             break;
         case 0xd3:  //OUT    D8
@@ -2349,6 +2560,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             uint8_t port = opcode[1];
             ProcessorOUT(state, port);
             state->pc++;
+            state->cyclecount += 10;
             }
             break;
         case 0xd4:  //CNC    D16
@@ -2358,6 +2570,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             }
             else{
                 state->pc += 2;
+                state->cyclecount += 11;
             }
             break;
         case 0xd5:  //PUSH    D
@@ -2380,6 +2593,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->cc.cy = (result > 0xff);
             state->a = result & 0xff;
             state->pc += 1;
+            state->cyclecount += 7;
             }
             break;
         case 0xd7:  //RST    2
@@ -2394,6 +2608,10 @@ void Emulate8080Op(State8080* state, FILE *output){
             //(SP) <- (SP) + 2
             if (state->cc.cy == 1){
                 Return(state);
+                state->cyclecount++;
+            }
+            else{
+                state->cyclecount += 5;
             }
             break;
         case 0xd9:  //RET
@@ -2410,6 +2628,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             }
             else{
                 state->pc += 2;
+                state->cyclecount += 10;
             }
             break;
         case 0xdb:  //IN     D8
@@ -2418,6 +2637,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             uint8_t port = opcode[1];
             state->a = ProcessorIN(state, port);
             state->pc++;
+            state->cyclecount += 10;
             }
             break;
         case 0xdc:  //CC     D16
@@ -2427,6 +2647,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             }
             else{
                 state->pc += 2;
+                state->cyclecount += 11;
             }
             break;
         case 0xdd:  //CALL   D16
@@ -2450,6 +2671,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->cc.cy = (result > 0xff);
             state->a = result & 0xff;
             state->pc += 1;
+            state->cyclecount += 7;
             }
             break;
         case 0xdf:  //RST    3
@@ -2461,6 +2683,10 @@ void Emulate8080Op(State8080* state, FILE *output){
             //If Parity is odd, RET:
             if (state->cc.p == 0){
                 Return(state);
+                state->cyclecount++;
+            }
+            else{
+                state->cyclecount += 5;
             }
             break;
         case 0xe1:  //POP    H
@@ -2477,6 +2703,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             }
             else{
                 state->pc += 2;
+                state->cyclecount += 10;
             }
             break;
         case 0xe3:  //XTHL
@@ -2491,6 +2718,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             temp = state->h;
             state->h = state->memory[state->sp + 1 & 0xFFFF];
             state->memory[state->sp + 1 & 0xFFFF] = temp;
+            state->cyclecount += 18;
             }
             break;
         case 0xe4:  //CPO    D16
@@ -2500,6 +2728,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             }
             else{
                 state->pc += 2;
+                state->cyclecount += 11;
             }
             break;
         case 0xe5:  //PUSH    H
@@ -2523,6 +2752,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->cc.ac = ((state->a & 0x8) | (opcode[1] & 0x8)) >> 3; //Programmer's guide says that AND operations use this logic, does not say anything about excluding ANI D8, so this is included.
             state->a = result & 0xff;
             state->pc += 1;
+            state->cyclecount += 7;
             }
             break;
         case 0xe7:  //RST    4
@@ -2534,12 +2764,17 @@ void Emulate8080Op(State8080* state, FILE *output){
             //If Parity is even, RET:
             if (state->cc.p == 1){
                 Return(state);
+                state->cyclecount++;
+            }
+            else{
+                state->cyclecount += 5;
             }
             break;
         case 0xe9:  //PCHL
             //Jump H and L indirect - move H and L to PC
             state->pc = (state->h << 8) | state->l;
             state->pc--;
+            state->cyclecount += 5;
             break;
         case 0xea:  //JPE    D16
             //Conditional jump (even parity)
@@ -2548,6 +2783,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             }
             else{
                 state->pc += 2;
+                state->cyclecount += 10;
             }
             break;
         case 0xeb:  //XCHG
@@ -2562,6 +2798,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             temp = state->l;
             state->l = state->e;
             state->e = temp;
+            state->cyclecount += 5;
             }
             break;
         case 0xec:  //CPE    D16
@@ -2571,6 +2808,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             }
             else{
                 state->pc += 2;
+                state->cyclecount += 11;
             }
             break;
         case 0xed:  //CALL   D16
@@ -2594,6 +2832,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->cc.ac = 0x0;
             state->a = result & 0xff;
             state->pc += 1;
+            state->cyclecount += 7;
             }
             break;
         case 0xef:  //RST    5
@@ -2605,6 +2844,10 @@ void Emulate8080Op(State8080* state, FILE *output){
             //If sign flag is 0 (i.e result was a positive integer), RET:
             if (state->cc.s == 0){
                 Return(state);
+                state->cyclecount++;
+            }
+            else{
+                state->cyclecount += 5;
             }
             break;
         case 0xf1:  //POP    PSW
@@ -2623,6 +2866,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->cc.s = (state->memory[state->sp] >> 7) & 0x1;
             state->a = state->memory[state->sp + 1 & 0xFFFF];
             state->sp += 2;
+            state->cyclecount += 10;
             break;
         case 0xf2:  //JP     D16
             //Conditional jump (positive integer)
@@ -2631,11 +2875,13 @@ void Emulate8080Op(State8080* state, FILE *output){
             }
             else{
                 state->pc += 2;
+                state->cyclecount += 10;
             }
             break;
         case 0xf3:  //DI
             //Disable interrupts
             state->int_enable = 0; break;
+            state->cyclecount += 4;
         case 0xf4:  //CP     D16
             //Condition call (positive integer)
             if (state->cc.s == 0){
@@ -2643,6 +2889,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             }
             else{
                 state->pc += 2;
+                state->cyclecount += 11;
             }
             break;
         case 0xf5:  //PUSH   PSW
@@ -2667,6 +2914,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->memory[state->sp - 2 & 0xFFFF] = (state->memory[state->sp - 2 & 0xFFFF] << 1) | 0x01;
             state->memory[state->sp - 2 & 0xFFFF] = (state->memory[state->sp - 2 & 0xFFFF] << 1) | state->cc.cy;
             state->sp -= 2;
+            state->cyclecount += 11;
             break;
         case 0xf6:  //ORI    D8
             //OR Immediate
@@ -2681,6 +2929,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->cc.ac = 0;
             state->a = result & 0xff;
             state->pc += 1;
+            state->cyclecount += 7;
             }
             break;
         case 0xf7:  //RST    6
@@ -2692,6 +2941,10 @@ void Emulate8080Op(State8080* state, FILE *output){
             //If sign flag is 1 (i.e result was a negative integer), RET:
             if (state->cc.s == 1){
                 Return(state);
+                state->cyclecount++;
+            }
+            else{
+                state->cyclecount += 5;
             }
             break;
         case 0xf9:  //SPHL
@@ -2699,6 +2952,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             //(SP) <- (H) (L)
             state->sp = state->h << 8;
             state->sp = state->sp | state->l;
+            state->cyclecount += 5;
             break;
         case 0xfa:  //JM     D16
             //Conditional jump (negative integer ("minus"))
@@ -2707,11 +2961,14 @@ void Emulate8080Op(State8080* state, FILE *output){
             }
             else{
                 state->pc += 2;
+                state->cyclecount += 10;
             }
             break;
         case 0xfb:  //EI
             //Enable interrupts
-            state->int_enable = 1; break;
+            state->int_enable = 1;
+            state->cyclecount += 4;
+            break;
         case 0xfc:  //CM     D16
             //Condition call (negative integer ("minus"))
             if (state->cc.s == 1){
@@ -2719,6 +2976,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             }
             else{
                 state->pc += 2;
+                state->cyclecount += 11;
             }
             break;
         case 0xfd:  //CALL   D16
@@ -2741,6 +2999,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->cc.ac = (~(((opcode[1] ^ state->a) & 0x10) ^ (result & 0x10)) >> 4);
             state->cc.cy = (result > 0xff);
             state->pc += 1;
+            state->cyclecount += 7;
             }
             break;
         case 0xff:  //RST    7
@@ -2778,6 +3037,7 @@ void Emulate8080Op(State8080* state, FILE *output){
 void Jump(State8080* state, unsigned char *opcode){
     state->pc = (opcode[2] << 8) | opcode[1];
     state->pc--;
+    state->cyclecount += 10;
 }
 
 void Call(State8080* state, unsigned char *opcode){
@@ -2787,6 +3047,7 @@ void Call(State8080* state, unsigned char *opcode){
     state->sp -= 2;
     state->pc = (opcode[2] << 8) | opcode[1];
     state->pc--; //Decrement pc, since the pc will get incremented after this function ends. Not decrementing would mean that the program starts at the CALLed address + 1.
+    state->cyclecount += 17;
 }
 
 void Return(State8080* state){
@@ -2794,6 +3055,7 @@ void Return(State8080* state){
     state->pc = (state->memory[state->sp + 1 & 0xFFFF] << 8) | state->memory[state->sp];
     state->sp += 2;
     state->pc--; //Decrement the pc so that the program starts at the return address rather than the return address +1 (pc will increment after this instruction).
+    state->cyclecount += 10;
 }
 
 void Restart(State8080* state, uint16_t newaddr){
@@ -2802,18 +3064,21 @@ void Restart(State8080* state, uint16_t newaddr){
     state->sp -= 2;
     state->pc = newaddr;
     state->pc--;
+    state->cyclecount += 11;
 }
 
 void Pop(State8080* state, uint8_t *high, uint8_t *low){
     *low = state->memory[state->sp];
     *high = state->memory[state->sp + 1 & 0xFFFF];
     state->sp += 2;
+    state->cyclecount += 10;
 }
 
 void Push(State8080* state, uint8_t *high, uint8_t *low){
     state->memory[state->sp - 1 & 0xFFFF] = *high;
     state->memory[state->sp - 2 & 0xFFFF] = *low;
     state->sp -= 2;
+    state->cyclecount += 11;
 }
 
 int Parity(uint8_t result){

@@ -27,6 +27,7 @@ typedef struct State8080 {
     uint8_t     *memory;
     struct      ConditionCodes      cc;
     uint8_t     int_enable;
+    int         cyclecount;
 } State8080;
 
 //Function declarations.
