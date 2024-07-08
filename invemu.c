@@ -46,6 +46,8 @@ int main(int argc, char *argv[]){
 
     //Create window
     SDL_Window *window = SDL_CreateWindow("Space Invaders", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 896, 1024, SDL_WINDOW_SHOWN);
+    SDL_Renderer *renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
+    SDL_Texture *Game = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_STREAMING, 256, 224); //Use Stream for real emulation.
 
     //Temporary, print info to cmd.
     while (i < 32){
@@ -90,24 +92,43 @@ int main(int argc, char *argv[]){
         stop = clock(); //Check the current clock tick count. This divided by CLOCKS_PER_SEC is the amount of clock ticks elapsed in a second.
         //printf("start: %ld, stop: %ld, stop - start = %ld, clocks/sec = %f\n", start, stop, stop - start, (float) (stop - start) / CLOCKS_PER_SEC);
 
-        //Refresh the screen every 1/60th of a second (~0.017s).
-        if (((float) (stop - start) / CLOCKS_PER_SEC) > 1.0/60.0){ //Compare the current clock tick count (stop) with the amount of ticks since the last refresh (which was at "start", so stop - start). (stop - start) divided by CLOCKS_PER_SEC equals time elapsed since last refresh.
-            if (state->int_enable){
-                Restart(state, 8 * 1); //Interrupt 1. Equivalent to RST 1 (middle of screen).
-                state->pc++;
-                //Render(state, window); //Render top half (implement later).
+        while (state->cyclecount >= 33333 && state->int_enable){
+            //printf("cycle count = %d\n", state->cyclecount);
+            start = clock(); //Restart tick counter.
+            if (((float) (start - stop) / CLOCKS_PER_SEC) > 1.0/60.0){ //Compare the current clock tick count (stop) with the amount of ticks since the last refresh (which was at "start", so stop - start). (stop - start) divided by CLOCKS_PER_SEC equals time elapsed since last refresh.
 
-                Restart(state, 8 * 2); //Interrupt 2. Equivalent to RST 2 (bottom of screen).
+                //Interrupt 1.
+                Restart(state, 0x8); //Equivalent to RST 1 (middle of screen).
+                state->pc++;
+                //Run instructions in interrupt until return.
+                while (state->pc != 0x87){
+                    Emulate8080Op(state, output);
+                    i++;
+                }
+                Emulate8080Op(state, output);
+                i++;
+
+                //Render(state, window, renderer, Game); //Render top half (implement later).
+
+                //Interrupt 2.
+                Restart(state, 0x10); //Equivalent to RST 2 (bottom of screen).
                 state->pc++; //Increment pc like any other instruction.
-                Render(state, window);
-                //printf("start = %d, stop - start = %f, stop = %d\n", start, (float) (stop - start) / CLOCKS_PER_SEC, stop);
-                start = clock(); //Restart tick counter.
+                while (state->pc != 0x87){
+                    Emulate8080Op(state, output);
+                    i++;
+                }
+                Emulate8080Op(state, output);
+                i++;
+
+                Render(state, window, renderer, Game);
+
+                state->cyclecount = 0;
             }
         }
 
         i++;
     }
-    Render(state, window);
+    Render(state, window, renderer, Game);
 
     //Print VRAM values
 //    i = 0x2400;
@@ -122,5 +143,7 @@ int main(int argc, char *argv[]){
 
     //Destroy SDL stuff.
     SDL_DestroyWindow(window);
+    SDL_DestroyTexture(Game);
+    SDL_DestroyRenderer(renderer);
     SDL_Quit();
 }

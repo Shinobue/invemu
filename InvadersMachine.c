@@ -52,7 +52,7 @@ void ProcessorOUT(State8080* state, uint8_t port){
     }
 }
 
-void Render(State8080 *state, SDL_Window *window){
+void Render(State8080 *state, SDL_Window *window, SDL_Renderer *renderer, SDL_Texture *Game){
     //Memory offset
     int memOffset = 0x2400;
     int vRamSize = 0x1c00;
@@ -98,8 +98,6 @@ void Render(State8080 *state, SDL_Window *window){
         }
     }
 
-    SDL_Renderer *renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
-    SDL_Texture *Game = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_STREAMING, 256, 224); //Use Stream for real emulation.
 
     //Clear screen
     //SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
@@ -123,7 +121,4 @@ void Render(State8080 *state, SDL_Window *window){
     //SDL_RenderCopy(renderer, Game, NULL, &screen);
     SDL_RenderCopyEx(renderer, Game, NULL, &screen, -90, &corner, 0);
     SDL_RenderPresent(renderer);
-
-    SDL_DestroyTexture(Game);
-    SDL_DestroyRenderer(renderer);
 }
