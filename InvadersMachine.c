@@ -9,6 +9,48 @@
 static uint16_t shiftRegister;
 static uint8_t shiftOffset;
 
+void Interrupt(State8080* state, FILE *output, int *instruction, int number){
+    switch (number){
+    case 1:
+        //Run an RST instruction, only save the current PC rather than PC + 1, since we want to go back exactly to the instruction we were at.
+        state->memory[state->sp - 1 & 0xFFFF] = ((state->pc) >> 8) & 0xff;
+        state->memory[state->sp - 2 & 0xFFFF] = (state->pc) & 0xff;
+        state->sp -= 2;
+        state->pc = 0x8;
+        state->cyclecount += 11;
+
+        //Run all the instructions in the interrupt. When pc is 0x87, the interrupt will return.
+        while (state->pc != 0x87){
+            Emulate8080Op(state, output);
+            (*instruction)++;
+        }
+        //Run return instruction.
+        Emulate8080Op(state, output);
+        (*instruction)++;
+        break;
+    case 2:
+        //Same as case 1, except go to instruction 0x10.
+        state->memory[state->sp - 1 & 0xFFFF] = ((state->pc) >> 8) & 0xff;
+        state->memory[state->sp - 2 & 0xFFFF] = (state->pc) & 0xff;
+        state->sp -= 2;
+        state->pc = 0x10;
+        state->cyclecount += 11;
+
+        while (state->pc != 0x87){
+            Emulate8080Op(state, output);
+            (*instruction)++;
+        }
+        Emulate8080Op(state, output);
+        (*instruction)++;
+        break;
+    default:
+        printf("Error: invalid interrupt!\n");
+        break;
+    }
+
+    return;
+}
+
 uint8_t ProcessorIN(State8080* state, uint8_t port){
     uint8_t processorInput;
     switch (port){
@@ -26,23 +68,23 @@ uint8_t ProcessorIN(State8080* state, uint8_t port){
         break;
 
         case 3: //Bit shift register read.
-        processorInput = shiftRegister & 0xFF; //Insert the right byte of the shift data into the accumulator.
+        processorInput = (shiftRegister >> (8 - shiftOffset)) & 0xFF; //Output contents of right byte, after shifting the register by 8 - offset.
         break;
     }
 
-    //Goes to A register
+    //Goes to A register (accumulator).
     return processorInput;
 }
 
 void ProcessorOUT(State8080* state, uint8_t port){
     switch (port){
         case 2: //Shift amount (3 bits).
-        shiftOffset = state->a & 0x07; //Mask out the 3 rightmost bits.
+        shiftOffset = state->a & 0x07; //Mask out the 3 rightmost bits, since they determine how much to shift by.
         break;
         case 3:
         break;
         case 4: //Shift data.
-        shiftRegister >>= 8 - shiftOffset; //Perform shift. Shift 8 bits by default, and if the shiftAmount is e.g 6 then shift 8 - 2 = 2 bits.
+        shiftRegister >>= 8; //Shift previous input to the right by 8 bits to make room in the left byte for the new data.
         shiftRegister = (state->a << 8) | shiftRegister; //Load new data into leftmost byte.
         break;
         case 5:

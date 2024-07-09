@@ -3059,8 +3059,8 @@ void Return(State8080* state){
 }
 
 void Restart(State8080* state, uint16_t newaddr){
-    state->memory[state->sp - 1 & 0xFFFF] = ((state->pc) >> 8) & 0xff;
-    state->memory[state->sp - 2 & 0xFFFF] = (state->pc) & 0xff;
+    state->memory[state->sp - 1 & 0xFFFF] = ((state->pc + 1) >> 8) & 0xff;
+    state->memory[state->sp - 2 & 0xFFFF] = (state->pc + 1) & 0xff;
     state->sp -= 2;
     state->pc = newaddr;
     state->pc--;

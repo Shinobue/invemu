@@ -17,6 +17,7 @@ int main(int argc, char *argv[]){
     FILE *output;
     int i = 0;
     clock_t start, stop;
+    int nextInterrupt = 1;
     start = clock(); //Start counting clock ticks.
 
     //Init SDL.
@@ -90,38 +91,32 @@ int main(int argc, char *argv[]){
         Emulate8080Op(state, output);
 
         stop = clock(); //Check the current clock tick count. This divided by CLOCKS_PER_SEC is the amount of clock ticks elapsed in a second.
-        //printf("start: %ld, stop: %ld, stop - start = %ld, clocks/sec = %f\n", start, stop, stop - start, (float) (stop - start) / CLOCKS_PER_SEC);
 
-        while (state->cyclecount >= 33333 && state->int_enable){
-            //printf("cycle count = %d\n", state->cyclecount);
-            start = clock(); //Restart tick counter.
-            if (((float) (start - stop) / CLOCKS_PER_SEC) > 1.0/60.0){ //Compare the current clock tick count (stop) with the amount of ticks since the last refresh (which was at "start", so stop - start). (stop - start) divided by CLOCKS_PER_SEC equals time elapsed since last refresh.
+        //33333 cycles per frame, and screen is updated twice per frame (interrupt 1 and 2), so after half a frame's worth of cycles (16667) have passed, trigger 1st interrupt.
+        while (state->cyclecount >= 16667 && state->int_enable && nextInterrupt == 1){
+            start = clock(); //Start tick counter. Wait until it's time for the first render (top half of screen).
+            //Once 16667 cycles have run, wait until 1/120 of a second has passed. Framerate is 60hz, and you run two interrupts per frame, so that makes 1/120.
+            if (((float) (start - stop) / CLOCKS_PER_SEC) > 1.0/120.0){ //Compare the current clock tick count (start) with the amount of ticks since the last refresh (which was at "stop", so start - stop). (start - stop) divided by CLOCKS_PER_SEC equals time elapsed since last refresh.
 
                 //Interrupt 1.
-                Restart(state, 0x8); //Equivalent to RST 1 (middle of screen).
-                state->pc++;
-                //Run instructions in interrupt until return.
-                while (state->pc != 0x87){
-                    Emulate8080Op(state, output);
-                    i++;
-                }
-                Emulate8080Op(state, output);
-                i++;
-
-                //Render(state, window, renderer, Game); //Render top half (implement later).
-
-                //Interrupt 2.
-                Restart(state, 0x10); //Equivalent to RST 2 (bottom of screen).
-                state->pc++; //Increment pc like any other instruction.
-                while (state->pc != 0x87){
-                    Emulate8080Op(state, output);
-                    i++;
-                }
-                Emulate8080Op(state, output);
-                i++;
+                Interrupt(state, output, &i, 1);
 
                 Render(state, window, renderer, Game);
 
+                nextInterrupt = 2;
+            }
+        }
+        //Trigger 2nd interrupt.
+        while (state->cyclecount >= 33333 && state->int_enable && nextInterrupt == 2){
+            start = clock(); //Restart tick counter.
+            if (((float) (start - stop) / CLOCKS_PER_SEC) > 1.0/120.0){
+
+                //Interrupt 2.
+                Interrupt(state, output, &i, 2);
+
+                Render(state, window, renderer, Game);
+
+                nextInterrupt = 1;
                 state->cyclecount = 0;
             }
         }
