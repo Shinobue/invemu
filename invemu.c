@@ -110,6 +110,7 @@ int main(int argc, char *argv[]){
         while (state->cyclecount >= 33333 && state->int_enable && nextInterrupt == 2){
             start = clock(); //Restart tick counter.
             if (((float) (start - stop) / CLOCKS_PER_SEC) > 1.0/120.0){
+                state->cyclecount = 0; //Reset cycle count. Once 33333 cycles have run, it should reset in order to correctly count the cycles that occur before the next interrupt.
 
                 //Interrupt 2.
                 Interrupt(state, output, &i, 2);
@@ -117,7 +118,6 @@ int main(int argc, char *argv[]){
                 Render(state, window, renderer, Game);
 
                 nextInterrupt = 1;
-                state->cyclecount = 0;
             }
         }
 
