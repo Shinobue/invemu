@@ -97,6 +97,8 @@ int main(int argc, char *argv[]){
             start = clock(); //Start tick counter. Wait until it's time for the first render (top half of screen).
             //Once 16667 cycles have run, wait until 1/120 of a second has passed. Framerate is 60hz, and you run two interrupts per frame, so that makes 1/120.
             if (((float) (start - stop) / CLOCKS_PER_SEC) > 1.0/120.0){ //Compare the current clock tick count (start) with the amount of ticks since the last refresh (which was at "stop", so start - stop). (start - stop) divided by CLOCKS_PER_SEC equals time elapsed since last refresh.
+                //If cyclecount is much higher, set it to 16667 to keep the timing.
+                state->cyclecount = 16667;
 
                 //Interrupt 1.
                 Interrupt(state, output, &i, 1);
@@ -110,7 +112,8 @@ int main(int argc, char *argv[]){
         while (state->cyclecount >= 33333 && state->int_enable && nextInterrupt == 2){
             start = clock(); //Restart tick counter.
             if (((float) (start - stop) / CLOCKS_PER_SEC) > 1.0/120.0){
-                state->cyclecount = 0; //Reset cycle count. Once 33333 cycles have run, it should reset in order to correctly count the cycles that occur before the next interrupt.
+                //Reset cycle count. Once 33333 cycles have run, it should reset in order to correctly count the cycles that occur before the next interrupt.
+                state->cyclecount = 0;
 
                 //Interrupt 2.
                 Interrupt(state, output, &i, 2);
