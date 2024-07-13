@@ -3,35 +3,27 @@
 #include <math.h>
 #include <string.h>
 #include <stdint.h>
-#include <time.h>
 #include "8080Emulator.h"
 #include <SDL.h>
 
 static uint16_t shiftRegister;
 static uint8_t shiftOffset;
-static int coin = 1;
 
 void Interrupt(State8080* state, FILE *output, int *instruction, int number){
-    clock_t time;
 
     switch (number){
+
+    //Mid-screen interrupt (scan line 96).
     case 1:
-        //Run an RST instruction, only save the current PC rather than PC + 1, since we want to go back exactly to the instruction we were at.
+        //Run an RST instruction, except save the current PC rather than PC + 1, since we want to go back exactly to the instruction we were at (it hasn't executed yet).
         state->memory[state->sp - 1 & 0xFFFF] = ((state->pc) >> 8) & 0xff;
         state->memory[state->sp - 2 & 0xFFFF] = (state->pc) & 0xff;
         state->sp -= 2;
         state->pc = 0x8;
         state->cyclecount += 11;
-
-        //Run all the instructions in the interrupt. When pc is 0x87, the interrupt will return. Inserting a coin gets interrupt 2 stuck in an infinite loop, so quit if cycle count gets too high.
-        while (state->pc != 0x87 && state->cyclecount < 16667){
-            Emulate8080Op(state, output);
-            (*instruction)++;
-        }
-        //Run return instruction.
-        Emulate8080Op(state, output);
-        (*instruction)++;
         break;
+
+    //End-screen interrupt (scan line 224).
     case 2:
         //Same as case 1, except go to instruction 0x10.
         state->memory[state->sp - 1 & 0xFFFF] = ((state->pc) >> 8) & 0xff;
@@ -39,79 +31,92 @@ void Interrupt(State8080* state, FILE *output, int *instruction, int number){
         state->sp -= 2;
         state->pc = 0x10;
         state->cyclecount += 11;
-
-        while (state->pc != 0x87 && state->cyclecount < 33333){
-            Emulate8080Op(state, output);
-            (*instruction)++;
-        }
-        Emulate8080Op(state, output);
-        (*instruction)++;
         break;
     default:
         printf("Error: invalid interrupt!\n");
         break;
     }
-
     return;
 }
 
 uint8_t ProcessorIN(State8080* state, uint8_t port){
     uint8_t processorInput;
-    clock_t time;
-    time = clock();
 
+    //Get keyboard input.
     SDL_Event keyPress;
-
-    if (SDL_PollEvent(&keyPress)){
-        switch (keyPress.type){
-            case SDL_KEYDOWN:
-            printf("Test1: %d\n", keyPress.key.keysym.sym);
-            break;
-            case SDL_KEYUP:
-            printf("Test2: %d\n", keyPress.key.keysym.sym);
-            break;
-        }
-    }
+    SDL_PollEvent(&keyPress);
 
     switch (port){
         case 0:
+        /*
         //port = port | 0x0E; //bit 1-3 are always 1: 0000 1110
         //If firing, set bit 4.
         //If left input, set bit 5.
         //If right input, set bit 6.
+        bit 0 = DIP4 (not sure what this does).
+        bit 1 = Always 1
+        bit 2 = Always 1
+        bit 3 = Always 1
+        bit 4 = Fire
+        bit 5 = Left
+        bit 6 = Right
+        bit 7 = Tied to demux port 7 (not sure what this does).
+        */
+
+        //Set bits 1-3.
         processorInput = 0x0E;
         break;
 
         case 1:
         /*
-        bit 0 = Insert coin
-        bit 1 = 2P start
-        bit 2 = 1P start
+        bit 0 = Insert coin (1 if deposit)
+        bit 1 = 2P start (1 if pressed)
+        bit 2 = 1P start (1 if pressed)
         bit 3 = Always 1
-        bit 4 = 1P shot
-        bit 5 = 1P left
-        bit 6 = 1P right
+        bit 4 = 1P shot (1 if pressed)
+        bit 5 = 1P left (1 if pressed)
+        bit 6 = 1P right (1 if pressed)
         bit 7 = not connected
         */
-//        if (keyPress.key.keysym.sym == SDLK_c)
-        if (coin && (((float) time / CLOCKS_PER_SEC) > 1)){
-//            processorInput = 0xD;
-//            coin = 0;
-//            printf("Test, coinSwitch = %X\n", state->memory[0x20EA]);
-//            printflag = 0;
-            processorInput = 0x4;
-        }
-        else{
-            processorInput = 0;
-        }
-//        if ((((float) time / CLOCKS_PER_SEC) > 9)){
-//            coin = 0;
-//            processorInput = 0xD;
-//        }
 
+        //Bit 3 is always 1
+        processorInput = 0x8;
+
+        //Check state of keyboard. The function returns an array, with each key on the keyboard as its index, so the array (pointer) + SDL_SCANCODE_C is the index corresponding to the c character on the keyboard.
+        if (*(SDL_GetKeyboardState(NULL) + SDL_SCANCODE_C) == 1){
+            processorInput |= 0x1;
+        }
+
+        if (*(SDL_GetKeyboardState(NULL) + SDL_SCANCODE_RETURN) == 1){
+            processorInput |= 0x4;
+        }
+
+        if (*(SDL_GetKeyboardState(NULL) + SDL_SCANCODE_SPACE) == 1){
+            processorInput |= 0x10;
+        }
+
+        if (*(SDL_GetKeyboardState(NULL) + SDL_SCANCODE_LEFT) == 1){
+            processorInput |= 0x20;
+        }
+
+        if (*(SDL_GetKeyboardState(NULL) + SDL_SCANCODE_RIGHT) == 1){
+            processorInput |= 0x40;
+        }
         break;
 
         case 2:
+        /*
+        bit 0 = + 1 extra ship if enabled (3 by default).
+        bit 1 = + 2 extra ships if enabled
+        bit 2 = Tilt (not sure what this does).
+        bit 3 = 0 = extra ship at 1500 points, 1 = extra ship at 1000 points.
+        bit 4 = 2P shot (1 if pressed)
+        bit 5 = 2P left  (1 if pressed)
+        bit 6 = 2P right (1 if pressed)
+        bit 7 = Coin info displayed in demo screen (asks user to insert coin). 0 = On, 1 = off.
+        */
+
+        //Set bit 0, 1, and 3.
         processorInput = 0xB;
         break;
 
@@ -148,7 +153,7 @@ void Render(State8080 *state, SDL_Window *window, SDL_Renderer *renderer, SDL_Te
     int vRamSize = 0x1c00;
     int i = 0;
     int byte = 0;
-    Uint32 pixels[0x1c00 * 8]; //8 pixels in each byte.
+    Uint32 pixels[0x1c00 * 8]; //8 pixels in each byte, so make an array 8 times the size of the vRAM, one index for each bit.
 
     //Draw white border around screen. For testing only. Comment out when not in use.
 //        while (i < 224){
