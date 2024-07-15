@@ -5,6 +5,7 @@
 #include <stdint.h>
 #include "8080Emulator.h"
 #include <SDL.h>
+#include <SDL_mixer.h>
 
 static uint16_t shiftRegister;
 static uint8_t shiftOffset;
@@ -132,15 +133,126 @@ uint8_t ProcessorIN(State8080* state, uint8_t port){
 void ProcessorOUT(State8080* state, uint8_t port){
     switch (port){
         case 2: //Shift amount (3 bits).
-        shiftOffset = state->a & 0x07; //Mask out the 3 rightmost bits, since they determine how much to shift by.
+        shiftOffset = state->a & 0x07; //Mask out the 3 rightmost bits (bit 0-2), since they determine how much to shift by.
         break;
         case 3:
+        /*
+        bit 0 = UFO (repeats)
+        bit 1 = Shot
+        bit 2 = Flash (player death)
+        bit 3 = Invader death
+        bit 4 = Extended play
+        bit 5 = AMP enable
+        bit 6 = NC (not wired)
+        bit 7 = NC (not wired)
+        */
+
+        static uint8_t prevSoundPort3 = 0;
+
+//        if (state->memory[0x2094] & 0x1 && ((prevSoundPort3 & 0x1) == 0)){
+//            Mix_OpenAudio(48000, MIX_DEFAULT_FORMAT, 2, 1024);
+//            static Mix_Music *UFOsound = Mix_LoadWAV("Sounds\\0.wav");
+//            Mix_PlayChannel(-1, sound, 0);
+//        }
+
+        if (state->memory[0x2094] & 0x2 && ((prevSoundPort3 & 0x2) == 0)){
+            Mix_OpenAudio(48000, MIX_DEFAULT_FORMAT, 2, 1024);
+            Mix_Chunk *sound = Mix_LoadWAV("Sounds\\1.wav");
+            Mix_PlayChannel(1, sound, 0);
+        }
+
+        if (state->memory[0x2094] & 0x4 && ((prevSoundPort3 & 0x4) == 0)){
+            Mix_OpenAudio(48000, MIX_DEFAULT_FORMAT, 2, 1024);
+            Mix_Chunk *sound = Mix_LoadWAV("Sounds\\2.wav");
+            Mix_PlayChannel(2, sound, 0);
+        }
+
+        if (state->memory[0x2094] & 0x8 && ((prevSoundPort3 & 0x8) == 0)){
+            Mix_OpenAudio(48000, MIX_DEFAULT_FORMAT, 2, 1024);
+            Mix_Chunk *sound = Mix_LoadWAV("Sounds\\3.wav");
+            Mix_PlayChannel(3, sound, 0);
+        }
+
+        //Mix_FreeChunk(sound);
+
+//        if (state->memory[0x2094] & 0x1 && ((prevSoundPort3 & 0x1) == 0)){
+//            SDL_AudioDeviceID device;
+//            SDL_AudioSpec spec;
+//            Uint8 *data;
+//            Uint32 len;
+//            SDL_LoadWAV("Sounds\\0.wav", &spec, &data, &len);
+//            SDL_OpenAudioDevice(NULL, 0, &spec, NULL, SDL_AUDIO_ALLOW_ANY_CHANGE);
+//            SDL_QueueAudio(device, data, len);
+//            SDL_PauseAudioDevice(device, 0);
+//
+//            SDL_FreeWAV(data);
+//            //SDL_CloseAudioDevice(device);
+//        }
+
+//        if (state->memory[0x2094] & 0x1 && ((prevSoundPort3 & 0x1) == 0)){
+//            SDL_AudioSpec spec;
+//            Uint8 *data;
+//            Uint32 len;
+//            SDL_LoadWAV("Sounds\\0.wav", &spec, &data, &len);
+//            SDL_OpenAudio(&spec, NULL);
+//            SDL_QueueAudio(1, data, len);
+//            SDL_PauseAudio(0);
+//            SDL_FreeWAV(data);
+//        }
+
+        prevSoundPort3 = state->memory[0x2094];
         break;
         case 4: //Shift data.
         shiftRegister >>= 8; //Shift previous input to the right by 8 bits to make room in the left byte for the new data.
         shiftRegister = (state->a << 8) | shiftRegister; //Load new data into leftmost byte.
         break;
         case 5:
+        /*
+        bit 0 = Fleet movement 1
+        bit 1 = Fleet movement 2
+        bit 2 = Fleet movement 3
+        bit 3 = Fleet movement 4
+        bit 4 = UFO Hit
+        bit 5 = NC (Cocktail mode control, to flip screen (unused))
+        bit 6 = NC (not wired)
+        bit 7 = NC (not wired)
+        */
+
+        static uint8_t prevSoundPort5 = 1; //Plays alien move sound on startup if not set to 1, because game sets RAM register to 1 for some reason.
+
+        //printf("sound port 5 = %X\n", state->memory[0x2098]);
+
+        if (state->memory[0x2098] & 0x1 && ((prevSoundPort5 & 0x1) == 0)){
+            Mix_OpenAudio(48000, MIX_DEFAULT_FORMAT, 2, 1024);
+            Mix_Chunk *sound = Mix_LoadWAV("Sounds\\4.wav");
+            Mix_PlayChannel(4, sound, 0);
+        }
+
+        if (state->memory[0x2098] & 0x2 && ((prevSoundPort5 & 0x2) == 0)){
+            Mix_OpenAudio(48000, MIX_DEFAULT_FORMAT, 2, 1024);
+            Mix_Chunk *sound = Mix_LoadWAV("Sounds\\5.wav");
+            Mix_PlayChannel(5, sound, 0);
+        }
+
+        if (state->memory[0x2098] & 0x4 && ((prevSoundPort5 & 0x4) == 0)){
+            Mix_OpenAudio(48000, MIX_DEFAULT_FORMAT, 2, 1024);
+            Mix_Chunk *sound = Mix_LoadWAV("Sounds\\6.wav");
+            Mix_PlayChannel(6, sound, 0);
+        }
+
+        if (state->memory[0x2098] & 0x8 && ((prevSoundPort5 & 0x8) == 0)){
+            Mix_OpenAudio(48000, MIX_DEFAULT_FORMAT, 2, 1024);
+            Mix_Chunk *sound = Mix_LoadWAV("Sounds\\7.wav");
+            Mix_PlayChannel(7, sound, 0);
+        }
+
+        if (state->memory[0x2098] & 0x10 && ((prevSoundPort5 & 0x10) == 0)){
+            Mix_OpenAudio(48000, MIX_DEFAULT_FORMAT, 2, 1024);
+            Mix_Chunk *sound = Mix_LoadWAV("Sounds\\8.wav");
+            Mix_PlayChannel(-1, sound, 0);
+        }
+
+        prevSoundPort5 = state->memory[0x2098];
         break;
         case 6: //Watch-dog.
         break;
