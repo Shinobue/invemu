@@ -155,50 +155,33 @@ void ProcessorOUT(State8080* state, uint8_t port){
 //            Mix_PlayChannel(-1, sound, 0);
 //        }
 
+        //Check if the sound bit in memory is enabled. If it is, and the previous value was disabled (i.e no sound was playing), play the sound.
         if (state->memory[0x2094] & 0x2 && ((prevSoundPort3 & 0x2) == 0)){
-            Mix_OpenAudio(48000, MIX_DEFAULT_FORMAT, 2, 1024);
-            Mix_Chunk *sound = Mix_LoadWAV("Sounds\\1.wav");
-            Mix_PlayChannel(1, sound, 0);
+            static Mix_Chunk *sound1;
+            //Load sound if it hasn't been loaded yet.
+            if (sound1 == NULL){
+                sound1 = Mix_LoadWAV("Sounds\\1.wav");
+            }
+            //Play the sound.
+            Mix_PlayChannel(1, sound1, 0);
+            //Note that the chunk storing a specific sound is never freed (until program ends of course), but this does not cause memory leaks since each sound is only loaded once.
         }
 
         if (state->memory[0x2094] & 0x4 && ((prevSoundPort3 & 0x4) == 0)){
-            Mix_OpenAudio(48000, MIX_DEFAULT_FORMAT, 2, 1024);
-            Mix_Chunk *sound = Mix_LoadWAV("Sounds\\2.wav");
-            Mix_PlayChannel(2, sound, 0);
+            static Mix_Chunk *sound2;
+            if (sound2 == NULL){
+                sound2 = Mix_LoadWAV("Sounds\\2.wav");
+            }
+            Mix_PlayChannel(2, sound2, 0);
         }
 
         if (state->memory[0x2094] & 0x8 && ((prevSoundPort3 & 0x8) == 0)){
-            Mix_OpenAudio(48000, MIX_DEFAULT_FORMAT, 2, 1024);
-            Mix_Chunk *sound = Mix_LoadWAV("Sounds\\3.wav");
-            Mix_PlayChannel(3, sound, 0);
+            static Mix_Chunk *sound3;
+            if (sound3 == NULL){
+                sound3 = Mix_LoadWAV("Sounds\\3.wav");
+            }
+            Mix_PlayChannel(3, sound3, 0);
         }
-
-        //Mix_FreeChunk(sound);
-
-//        if (state->memory[0x2094] & 0x1 && ((prevSoundPort3 & 0x1) == 0)){
-//            SDL_AudioDeviceID device;
-//            SDL_AudioSpec spec;
-//            Uint8 *data;
-//            Uint32 len;
-//            SDL_LoadWAV("Sounds\\0.wav", &spec, &data, &len);
-//            SDL_OpenAudioDevice(NULL, 0, &spec, NULL, SDL_AUDIO_ALLOW_ANY_CHANGE);
-//            SDL_QueueAudio(device, data, len);
-//            SDL_PauseAudioDevice(device, 0);
-//
-//            SDL_FreeWAV(data);
-//            //SDL_CloseAudioDevice(device);
-//        }
-
-//        if (state->memory[0x2094] & 0x1 && ((prevSoundPort3 & 0x1) == 0)){
-//            SDL_AudioSpec spec;
-//            Uint8 *data;
-//            Uint32 len;
-//            SDL_LoadWAV("Sounds\\0.wav", &spec, &data, &len);
-//            SDL_OpenAudio(&spec, NULL);
-//            SDL_QueueAudio(1, data, len);
-//            SDL_PauseAudio(0);
-//            SDL_FreeWAV(data);
-//        }
 
         prevSoundPort3 = state->memory[0x2094];
         break;
@@ -218,38 +201,49 @@ void ProcessorOUT(State8080* state, uint8_t port){
         bit 7 = NC (not wired)
         */
 
-        static uint8_t prevSoundPort5 = 1; //Plays alien move sound on startup if not set to 1, because game sets RAM register to 1 for some reason.
+        static uint8_t prevSoundPort5 = 1; //Plays alien move sound on startup if not set to 1, because game sets RAM register 0x2098 to 1 for some reason.
 
-        //printf("sound port 5 = %X\n", state->memory[0x2098]);
+        //Start audio. Runs at the beginning of the game due to the alien move sound on startup mentioned above. Note: move this to invemu.c.
+        Mix_OpenAudio(48000, MIX_DEFAULT_FORMAT, 2, 1024);
 
         if (state->memory[0x2098] & 0x1 && ((prevSoundPort5 & 0x1) == 0)){
-            Mix_OpenAudio(48000, MIX_DEFAULT_FORMAT, 2, 1024);
-            Mix_Chunk *sound = Mix_LoadWAV("Sounds\\4.wav");
-            Mix_PlayChannel(4, sound, 0);
+            static Mix_Chunk *sound4;
+            if (sound4 == NULL){
+                sound4 = Mix_LoadWAV("Sounds\\4.wav");
+            }
+            Mix_PlayChannel(4, sound4, 0);
         }
 
         if (state->memory[0x2098] & 0x2 && ((prevSoundPort5 & 0x2) == 0)){
-            Mix_OpenAudio(48000, MIX_DEFAULT_FORMAT, 2, 1024);
-            Mix_Chunk *sound = Mix_LoadWAV("Sounds\\5.wav");
-            Mix_PlayChannel(5, sound, 0);
+            static Mix_Chunk *sound5;
+            if (sound5 == NULL){
+                sound5 = Mix_LoadWAV("Sounds\\5.wav");
+            }
+            Mix_PlayChannel(5, sound5, 0);
         }
 
         if (state->memory[0x2098] & 0x4 && ((prevSoundPort5 & 0x4) == 0)){
-            Mix_OpenAudio(48000, MIX_DEFAULT_FORMAT, 2, 1024);
-            Mix_Chunk *sound = Mix_LoadWAV("Sounds\\6.wav");
-            Mix_PlayChannel(6, sound, 0);
+            static Mix_Chunk *sound6;
+            if (sound6 == NULL){
+                sound6 = Mix_LoadWAV("Sounds\\6.wav");
+            }
+            Mix_PlayChannel(6, sound6, 0);
         }
 
         if (state->memory[0x2098] & 0x8 && ((prevSoundPort5 & 0x8) == 0)){
-            Mix_OpenAudio(48000, MIX_DEFAULT_FORMAT, 2, 1024);
-            Mix_Chunk *sound = Mix_LoadWAV("Sounds\\7.wav");
-            Mix_PlayChannel(7, sound, 0);
+            static Mix_Chunk *sound7;
+            if (sound7 == NULL){
+                sound7 = Mix_LoadWAV("Sounds\\7.wav");
+            }
+            Mix_PlayChannel(7, sound7, 0);
         }
 
         if (state->memory[0x2098] & 0x10 && ((prevSoundPort5 & 0x10) == 0)){
-            Mix_OpenAudio(48000, MIX_DEFAULT_FORMAT, 2, 1024);
-            Mix_Chunk *sound = Mix_LoadWAV("Sounds\\8.wav");
-            Mix_PlayChannel(-1, sound, 0);
+            static Mix_Chunk *sound8;
+            if (sound8 == NULL){
+                sound8 = Mix_LoadWAV("Sounds\\8.wav");
+            }
+            Mix_PlayChannel(0, sound8, 0);
         }
 
         prevSoundPort5 = state->memory[0x2098];
