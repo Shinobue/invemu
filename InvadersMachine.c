@@ -149,11 +149,17 @@ void ProcessorOUT(State8080* state, uint8_t port){
 
         static uint8_t prevSoundPort3 = 0;
 
-//        if (state->memory[0x2094] & 0x1 && ((prevSoundPort3 & 0x1) == 0)){
-//            Mix_OpenAudio(48000, MIX_DEFAULT_FORMAT, 2, 1024);
-//            static Mix_Music *UFOsound = Mix_LoadWAV("Sounds\\0.wav");
-//            Mix_PlayChannel(-1, sound, 0);
-//        }
+        //UFO sound. Loops until destroyed or it disappears.
+        if (state->memory[0x2094] & 0x1 && ((prevSoundPort3 & 0x1) == 0)){
+            static Mix_Music *UFOsound;
+            if (UFOsound == NULL){
+                UFOsound = Mix_LoadMUS("Sounds\\0.wav");
+            }
+            Mix_PlayMusic(UFOsound, 30);
+        }
+        if ((state->memory[0x2094] & 0x1) == 0 && ((prevSoundPort3 & 0x1) == 1)){
+            Mix_HaltMusic();
+        }
 
         //Check if the sound bit in memory is enabled. If it is, and the previous value was disabled (i.e no sound was playing), play the sound.
         if (state->memory[0x2094] & 0x2 && ((prevSoundPort3 & 0x2) == 0)){
@@ -163,7 +169,7 @@ void ProcessorOUT(State8080* state, uint8_t port){
                 sound1 = Mix_LoadWAV("Sounds\\1.wav");
             }
             //Play the sound.
-            Mix_PlayChannel(1, sound1, 0);
+            Mix_PlayChannel(-1, sound1, 0);
             //Note that the chunk storing a specific sound is never freed (until program ends of course), but this does not cause memory leaks since each sound is only loaded once.
         }
 
@@ -172,7 +178,7 @@ void ProcessorOUT(State8080* state, uint8_t port){
             if (sound2 == NULL){
                 sound2 = Mix_LoadWAV("Sounds\\2.wav");
             }
-            Mix_PlayChannel(2, sound2, 0);
+            Mix_PlayChannel(-1, sound2, 0);
         }
 
         if (state->memory[0x2094] & 0x8 && ((prevSoundPort3 & 0x8) == 0)){
@@ -180,7 +186,7 @@ void ProcessorOUT(State8080* state, uint8_t port){
             if (sound3 == NULL){
                 sound3 = Mix_LoadWAV("Sounds\\3.wav");
             }
-            Mix_PlayChannel(3, sound3, 0);
+            Mix_PlayChannel(-1, sound3, 0);
         }
 
         prevSoundPort3 = state->memory[0x2094];
@@ -211,7 +217,7 @@ void ProcessorOUT(State8080* state, uint8_t port){
             if (sound4 == NULL){
                 sound4 = Mix_LoadWAV("Sounds\\4.wav");
             }
-            Mix_PlayChannel(4, sound4, 0);
+            Mix_PlayChannel(-1, sound4, 0);
         }
 
         if (state->memory[0x2098] & 0x2 && ((prevSoundPort5 & 0x2) == 0)){
@@ -219,7 +225,7 @@ void ProcessorOUT(State8080* state, uint8_t port){
             if (sound5 == NULL){
                 sound5 = Mix_LoadWAV("Sounds\\5.wav");
             }
-            Mix_PlayChannel(5, sound5, 0);
+            Mix_PlayChannel(-1, sound5, 0);
         }
 
         if (state->memory[0x2098] & 0x4 && ((prevSoundPort5 & 0x4) == 0)){
@@ -227,7 +233,7 @@ void ProcessorOUT(State8080* state, uint8_t port){
             if (sound6 == NULL){
                 sound6 = Mix_LoadWAV("Sounds\\6.wav");
             }
-            Mix_PlayChannel(6, sound6, 0);
+            Mix_PlayChannel(-1, sound6, 0);
         }
 
         if (state->memory[0x2098] & 0x8 && ((prevSoundPort5 & 0x8) == 0)){
@@ -235,7 +241,7 @@ void ProcessorOUT(State8080* state, uint8_t port){
             if (sound7 == NULL){
                 sound7 = Mix_LoadWAV("Sounds\\7.wav");
             }
-            Mix_PlayChannel(7, sound7, 0);
+            Mix_PlayChannel(-1, sound7, 0);
         }
 
         if (state->memory[0x2098] & 0x10 && ((prevSoundPort5 & 0x10) == 0)){
@@ -243,7 +249,7 @@ void ProcessorOUT(State8080* state, uint8_t port){
             if (sound8 == NULL){
                 sound8 = Mix_LoadWAV("Sounds\\8.wav");
             }
-            Mix_PlayChannel(0, sound8, 0);
+            Mix_PlayChannel(-1, sound8, 0);
         }
 
         prevSoundPort5 = state->memory[0x2098];
