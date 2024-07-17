@@ -141,7 +141,7 @@ void ProcessorOUT(State8080* state, uint8_t port){
         bit 1 = Shot
         bit 2 = Flash (player death)
         bit 3 = Invader death
-        bit 4 = Extended play
+        bit 4 = Extended play (extra life sound)
         bit 5 = AMP enable
         bit 6 = NC (not wired)
         bit 7 = NC (not wired)
@@ -187,6 +187,14 @@ void ProcessorOUT(State8080* state, uint8_t port){
                 sound3 = Mix_LoadWAV("Sounds\\3.wav");
             }
             Mix_PlayChannel(-1, sound3, 0);
+        }
+
+        if (state->memory[0x2094] & 0x10 && ((prevSoundPort3 & 0x10) == 0)){
+            static Mix_Chunk *sound9;
+            if (sound9 == NULL){
+                sound9 = Mix_LoadWAV("Sounds\\9.wav");
+            }
+            Mix_PlayChannel(-1, sound9, 0);
         }
 
         prevSoundPort3 = state->memory[0x2094];
