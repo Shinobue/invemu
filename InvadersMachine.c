@@ -88,6 +88,11 @@ uint8_t ProcessorIN(State8080* state, uint8_t port){
             processorInput |= 0x1;
         }
 
+        //Tilt. Causes game over.
+        if (*(SDL_GetKeyboardState(NULL) + SDL_SCANCODE_2) == 1){
+            processorInput |= 0x2;
+        }
+
         if (*(SDL_GetKeyboardState(NULL) + SDL_SCANCODE_RETURN) == 1){
             processorInput |= 0x4;
         }
@@ -119,6 +124,23 @@ uint8_t ProcessorIN(State8080* state, uint8_t port){
 
         //Set bit 0, 1, and 3.
         processorInput = 0xB;
+
+        if (*(SDL_GetKeyboardState(NULL) + SDL_SCANCODE_T) == 1){
+            processorInput |= 0x4;
+        }
+
+        if (*(SDL_GetKeyboardState(NULL) + SDL_SCANCODE_SPACE) == 1){
+            processorInput |= 0x10;
+        }
+
+        if (*(SDL_GetKeyboardState(NULL) + SDL_SCANCODE_LEFT) == 1){
+            processorInput |= 0x20;
+        }
+
+        if (*(SDL_GetKeyboardState(NULL) + SDL_SCANCODE_RIGHT) == 1){
+            processorInput |= 0x40;
+        }
+
         break;
 
         case 3: //Bit shift register read.
