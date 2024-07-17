@@ -88,7 +88,7 @@ uint8_t ProcessorIN(State8080* state, uint8_t port){
             processorInput |= 0x1;
         }
 
-        //Tilt. Causes game over.
+        //2 Player mode.
         if (*(SDL_GetKeyboardState(NULL) + SDL_SCANCODE_2) == 1){
             processorInput |= 0x2;
         }
@@ -125,6 +125,7 @@ uint8_t ProcessorIN(State8080* state, uint8_t port){
         //Set bit 0, 1, and 3.
         processorInput = 0xB;
 
+        //Tilt. Causes game over.
         if (*(SDL_GetKeyboardState(NULL) + SDL_SCANCODE_T) == 1){
             processorInput |= 0x4;
         }
