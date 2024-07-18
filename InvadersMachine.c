@@ -170,6 +170,10 @@ void ProcessorOUT(State8080* state, uint8_t port){
         bit 7 = NC (not wired)
         */
 
+        //Volume
+        Mix_MasterVolume(40);
+        Mix_VolumeMusic(40);
+
         static uint8_t prevSoundPort3 = 0;
 
         //UFO sound. Loops until destroyed or it disappears.
@@ -324,7 +328,18 @@ void Render(State8080 *state, SDL_Window *window, SDL_Renderer *renderer, SDL_Te
     while (byte < vRamSize){
         //Render starting from the least significant bit. Output white if bit is 1, 0 if black. Loop through all 8 bits in each byte.
         if ((state->memory[memOffset + byte] << (7 - (i % 8))) & 0x80){
-            pixels[i] = 0xFFFFFFFF; //White
+            //Green area, from slightly above the bunkers down to the bottom line. Also the area containing remaining lives.
+            if ((byte % 32 >= 2 && byte % 32 <= 8) || (byte % 32 < 2 && i / 256 >= 25 && i / 256 <= 135)){
+                pixels[i] = 0x0000FF00;
+            }
+            //Red area, from just below the score to above the tip of the highest aliens' heads.
+            else if (byte % 32 >= 24 && byte % 32 <= 27){
+                pixels[i] = 0x000000FF;
+            }
+            //Everything else, white.
+            else{
+                pixels[i] = 0xFFFFFFFF;
+            }
         }
         else{
             pixels[i] = 0x00000000; //Black
