@@ -53,7 +53,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             {  //Add curly braces to localise declared variables.
             uint16_t offset;
             offset = (state->b << 8) | state->c; //Create memory offset. Address width is 16 bits, so shift the B part 8 bits and OR in (or use +) the c part. Leftmost 8 bits are b, rightmost 8 bits are c.
-            state->memory[offset] = state->a; //(BC) <- A. Memory located at the address pointed to by the contents of BC is loaded with a.
+            MemWrite(state, offset, state->a); //(BC) <- A. Memory located at the address pointed to by the contents of BC is loaded with a.
             state->cyclecount += 7;
             }
             break;
@@ -223,7 +223,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             {
             uint16_t offset;
             offset = (state->d << 8) | state->e;
-            state->memory[offset] = state->a;
+            MemWrite(state, offset, state->a);
             state->cyclecount += 7;
             }
             break;
@@ -387,8 +387,8 @@ void Emulate8080Op(State8080* state, FILE *output){
             {
             uint16_t offset;
             offset = (opcode[2] << 8) | opcode[1];
-            state->memory[offset] = state->l;
-            state->memory[offset + 1] = state->h;
+            MemWrite(state, offset, state->l);
+            MemWrite(state, offset + 1, state->h);
             state->pc += 2;
             state->cyclecount += 16;
             }
@@ -564,7 +564,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             {
             uint16_t offset;
             offset = (opcode[2] << 8) | opcode[1];
-            state->memory[offset] = state->a;
+            MemWrite(state, offset, state->a);
             state->pc += 2;
             state->cyclecount += 13;
             }
@@ -587,7 +587,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->cc.s = ((result & 0x80) != 0);
             state->cc.p = Parity((uint8_t) (result & 0xff));
             state->cc.ac = ((result & 0x0F) < (state->memory[offset] & 0x0F));
-            state->memory[offset] = result & 0xff;
+            MemWrite(state, offset, result & 0xff);
             state->cyclecount += 10;
             }
             break;
@@ -603,7 +603,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->cc.s = ((result & 0x80) != 0);
             state->cc.p = Parity((uint8_t) (result & 0xff));
             state->cc.ac = ((result & 0x0F) < (state->memory[offset] & 0x0F));
-            state->memory[offset] = result & 0xff;
+            MemWrite(state, offset, result & 0xff);
             state->cyclecount += 10;
             }
             break;
@@ -613,7 +613,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             {
             uint16_t offset;
             offset = (state->h << 8) | state->l;
-            state->memory[offset] = opcode[1];
+            MemWrite(state, offset, opcode[1]);
             state->pc += 1;
             state->cyclecount += 10;
             }
@@ -1019,7 +1019,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             {
             uint16_t offset;
             offset = (state->h << 8) | state->l;
-            state->memory[offset] = state->b;
+            MemWrite(state, offset, state->b);
             state->cyclecount += 7;
             }
             break;
@@ -1029,7 +1029,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             {
             uint16_t offset;
             offset = (state->h << 8) | state->l;
-            state->memory[offset] = state->c;
+            MemWrite(state, offset, state->c);
             state->cyclecount += 7;
             }
             break;
@@ -1039,7 +1039,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             {
             uint16_t offset;
             offset = (state->h << 8) | state->l;
-            state->memory[offset] = state->d;
+            MemWrite(state, offset, state->d);
             state->cyclecount += 7;
             }
             break;
@@ -1049,7 +1049,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             {
             uint16_t offset;
             offset = (state->h << 8) | state->l;
-            state->memory[offset] = state->e;
+            MemWrite(state, offset, state->e);
             state->cyclecount += 7;
             }
             break;
@@ -1059,7 +1059,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             {
             uint16_t offset;
             offset = (state->h << 8) | state->l;
-            state->memory[offset] = state->h;
+            MemWrite(state, offset, state->h);
             state->cyclecount += 7;
             }
             break;
@@ -1069,7 +1069,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             {
             uint16_t offset;
             offset = (state->h << 8) | state->l;
-            state->memory[offset] = state->l;
+            MemWrite(state, offset, state->l);
             state->cyclecount += 7;
             }
             break;
@@ -1083,7 +1083,7 @@ void Emulate8080Op(State8080* state, FILE *output){
             {
             uint16_t offset;
             offset = (state->h << 8) | state->l;
-            state->memory[offset] = state->a;
+            MemWrite(state, offset, state->a);
             state->cyclecount += 7;
             }
             break;
@@ -2439,10 +2439,10 @@ void Emulate8080Op(State8080* state, FILE *output){
             uint8_t temp;
             temp = state->l;
             state->l = state->memory[state->sp];
-            state->memory[state->sp] = temp;
+            MemWrite(state, state->sp, temp);
             temp = state->h;
             state->h = state->memory[state->sp + 1 & 0xFFFF];
-            state->memory[state->sp + 1 & 0xFFFF] = temp;
+            MemWrite(state, state->sp + 1 & 0xFFFF, temp);
             state->cyclecount += 18;
             }
             break;
@@ -2629,15 +2629,15 @@ void Emulate8080Op(State8080* state, FILE *output){
             //((SP) - 2)6 <- (Z)
             //((SP) - 2)7 <- (S)
             //(SP) <- (SP) - 2
-            state->memory[state->sp - 1 & 0xFFFF] = state->a;
-            state->memory[state->sp - 2 & 0xFFFF] = state->cc.s & 0x01;
-            state->memory[state->sp - 2 & 0xFFFF] = (state->memory[state->sp - 2 & 0xFFFF] << 1) | state->cc.z;
-            state->memory[state->sp - 2 & 0xFFFF] = (state->memory[state->sp - 2 & 0xFFFF] << 1) | 0x0;
-            state->memory[state->sp - 2 & 0xFFFF] = (state->memory[state->sp - 2 & 0xFFFF] << 1) | state->cc.ac;
-            state->memory[state->sp - 2 & 0xFFFF] = (state->memory[state->sp - 2 & 0xFFFF] << 1) | 0x0;
-            state->memory[state->sp - 2 & 0xFFFF] = (state->memory[state->sp - 2 & 0xFFFF] << 1) | state->cc.p;
-            state->memory[state->sp - 2 & 0xFFFF] = (state->memory[state->sp - 2 & 0xFFFF] << 1) | 0x01;
-            state->memory[state->sp - 2 & 0xFFFF] = (state->memory[state->sp - 2 & 0xFFFF] << 1) | state->cc.cy;
+            MemWrite(state, state->sp - 1 & 0xFFFF, state->a);
+            MemWrite(state, state->sp - 2 & 0xFFFF, state->cc.s & 0x01);
+            MemWrite(state, state->sp - 2 & 0xFFFF, (state->memory[state->sp - 2 & 0xFFFF] << 1) | state->cc.z);
+            MemWrite(state, state->sp - 2 & 0xFFFF, (state->memory[state->sp - 2 & 0xFFFF] << 1) | 0x0);
+            MemWrite(state, state->sp - 2 & 0xFFFF, (state->memory[state->sp - 2 & 0xFFFF] << 1) | state->cc.ac);
+            MemWrite(state, state->sp - 2 & 0xFFFF, (state->memory[state->sp - 2 & 0xFFFF] << 1) | 0x0);
+            MemWrite(state, state->sp - 2 & 0xFFFF, (state->memory[state->sp - 2 & 0xFFFF] << 1) | state->cc.p);
+            MemWrite(state, state->sp - 2 & 0xFFFF, (state->memory[state->sp - 2 & 0xFFFF] << 1) | 0x01);
+            MemWrite(state, state->sp - 2 & 0xFFFF, (state->memory[state->sp - 2 & 0xFFFF] << 1) | state->cc.cy);
             state->sp -= 2;
             state->cyclecount += 11;
             break;
@@ -2760,7 +2760,7 @@ void Emulate8080Op(State8080* state, FILE *output){
 }
 
 void MemWrite(State8080* state, uint16_t location, uint8_t value){
-    if (location < RAMoffset){
+    if (location < RAMoffset && cpmflag == 0){
         printf("Error: program attempts to write into ROM! Memory write was attempted at: %04X using the value %02X\n", location, value);
     }
     //Note: If using this processor emulator for a non-space invaders emulator, this may need to be changed.
@@ -2781,8 +2781,8 @@ void Jump(State8080* state, unsigned char *opcode){
 
 void Call(State8080* state, unsigned char *opcode){
     //Store the address of the next instruction on the stack pointer (remember the stack "grows downward").
-    state->memory[state->sp - 1 & 0xFFFF] = (state->pc + 3) >> 8; //The & 0xFFFF is for the event that sp is 0 or 1. Due to what I THINK is type promotion, state->sp - 1 becomes 0xFFFFFFFF instead of 0xFFFF.
-    state->memory[state->sp - 2 & 0xFFFF] = (state->pc + 3) & 0xff;
+    MemWrite(state, state->sp - 1 & 0xFFFF, (state->pc + 3) >> 8); //The & 0xFFFF is for the event that sp is 0 or 1. Due to what I THINK is type promotion, state->sp - 1 becomes 0xFFFFFFFF instead of 0xFFFF.
+    MemWrite(state, state->sp - 2 & 0xFFFF, (state->pc + 3) & 0xff);
     state->sp -= 2;
     state->pc = (opcode[2] << 8) | opcode[1];
     state->pc--; //Decrement pc, since the pc will get incremented after this function ends. Not decrementing would mean that the program starts at the CALLed address + 1.
@@ -2798,8 +2798,8 @@ void Return(State8080* state){
 }
 
 void Restart(State8080* state, uint16_t newaddr){
-    state->memory[state->sp - 1 & 0xFFFF] = ((state->pc + 1) >> 8) & 0xff;
-    state->memory[state->sp - 2 & 0xFFFF] = (state->pc + 1) & 0xff;
+    MemWrite(state, state->sp - 1 & 0xFFFF, ((state->pc + 1) >> 8) & 0xff);
+    MemWrite(state, state->sp - 2 & 0xFFFF, (state->pc + 1) & 0xff);
     state->sp -= 2;
     state->pc = newaddr;
     state->pc--;
@@ -2814,8 +2814,8 @@ void Pop(State8080* state, uint8_t *high, uint8_t *low){
 }
 
 void Push(State8080* state, uint8_t *high, uint8_t *low){
-    state->memory[state->sp - 1 & 0xFFFF] = *high;
-    state->memory[state->sp - 2 & 0xFFFF] = *low;
+    MemWrite(state, state->sp - 1 & 0xFFFF, *high);
+    MemWrite(state, state->sp - 2 & 0xFFFF, *low);
     state->sp -= 2;
     state->cyclecount += 11;
 }
