@@ -32,7 +32,6 @@ typedef struct State8080 {
 
 //Function declarations.
 void UnimplementedInstruction(State8080*);
-void Disassemble8080Op(unsigned char *, int);
 void Emulate8080Op(State8080*, FILE *);
 void Jump(State8080*, unsigned char *);
 void Call(State8080*, unsigned char *);
@@ -41,6 +40,7 @@ void Restart(State8080*, uint16_t);
 void Pop(State8080*, uint8_t *, uint8_t *);
 void Push(State8080*, uint8_t *, uint8_t *);
 int Parity(uint8_t);
+void Disassemble8080Op(unsigned char *, int);
 //File output function
 void Disassemble8080OpToFile(unsigned char *, int, FILE *);
 
