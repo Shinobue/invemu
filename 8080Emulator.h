@@ -31,8 +31,8 @@ typedef struct State8080 {
 } State8080;
 
 //Function declarations.
-void UnimplementedInstruction(State8080*);
 void Emulate8080Op(State8080*, FILE *);
+void MemWrite(State8080*, uint16_t, uint8_t);
 void Jump(State8080*, unsigned char *);
 void Call(State8080*, unsigned char *);
 void Return(State8080*);

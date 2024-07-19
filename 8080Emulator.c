@@ -10,10 +10,7 @@ extern const int fileoutputflag;
 extern const int printflag;
 extern const int cpmflag;
 
-void UnimplementedInstruction(State8080* state){
-    printf("Error: Unimplemented instruction");
-}
-
+extern uint16_t RAMoffset;
 
 void Emulate8080Op(State8080* state, FILE *output){
     unsigned char *opcode = &state->memory[state->pc];
@@ -2762,11 +2759,12 @@ void Emulate8080Op(State8080* state, FILE *output){
     state->pc+=1;
 }
 
-void MemWrite(State8080* state, uint16_t memOffset, uint16_t location, uint8_t value){
-    if (location < 0x2000){
+void MemWrite(State8080* state, uint16_t location, uint8_t value){
+    if (location < RAMoffset){
         printf("Error: program attempts to write into ROM! Memory write was attempted at: %04X using the value %02X\n", location, value);
     }
-    else if (location >= 0x4000){
+    //Note: If using this processor emulator for a non-space invaders emulator, this may need to be changed.
+    else if (location >= 0x4000 && cpmflag == 0){
         printf("Program attempts to write outside of RAM space @ %04X, mirroring to RAM location %04X...\n", location, location & 0x3FFF);
         state->memory[location & 0x3FFF] = value;
     }

@@ -14,8 +14,9 @@ const int fileoutputflag = 0;
 const int printflag = 0;
 const int cpmflag = 0;
 
+uint16_t RAMoffset;
+
 int main(int argc, char *argv[]){
-    int RAMoffset;
     FILE *output;
     int i = 0;
     clock_t start, stop;
@@ -53,7 +54,7 @@ int main(int argc, char *argv[]){
     SDL_Texture *Game = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_STREAMING, 256, 224); //Use Stream for real emulation.
 
     //Temporary, print info to cmd.
-//    printf("\nRAMoffset = %d\n\n\n", RAMoffset);
+    printf("\nRAMoffset = %04X\n\n\n", RAMoffset);
 
     //For debugging.
     if (printflag){printf(" Ins#   pc   op  mnem   byte(s)\n");}
@@ -151,7 +152,7 @@ int LoadFile(uint8_t *memory){
     long int filesize;
     unsigned char *buffer;
     int filecount = 4;
-    int memOffset = 0;
+    uint16_t memOffset = 0;
 
     while (filecount > 0){
         //Processor diagnostics.
