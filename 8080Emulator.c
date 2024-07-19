@@ -317,8 +317,6 @@ void Emulate8080Op(State8080* state, FILE *output){
             state->c = opcode[1];
             state->pc += 2;
             state->cyclecount += 10;
-
-            //printf("LXI    B,D16. C = %02X, B = %02X", state->c, state->b);
             break;
         case 0x02:  //STAX   B
             //Store accumulator indirect
@@ -327,8 +325,6 @@ void Emulate8080Op(State8080* state, FILE *output){
             uint16_t offset;
             offset = (state->b << 8) | state->c; //Create memory offset. Address width is 16 bits, so shift the B part 8 bits and OR in (or use +) the c part. Leftmost 8 bits are b, rightmost 8 bits are c.
             state->memory[offset] = state->a; //(BC) <- A. Memory located at the address pointed to by the contents of BC is loaded with a.
-
-            //printf("STAX   B. A = %02X, B = %02X, C = %02X, BC = %02X, (BC) = %02X", state->a, state->b, state->c, (state->b << 8) + state->c, state->memory[(state->b << 8) + state->c]);
             state->cyclecount += 7;
             }
             break;
@@ -3097,82 +3093,6 @@ int Parity(uint8_t result){
     }
 
     return (count % 2 == 0);
-}
-
-int LoadFile(uint8_t *memory){
-    FILE *invaders;
-    long int filesize;
-    unsigned char *buffer;
-    int filecount = 4;
-    int memOffset = 0;
-
-    while (filecount > 0){
-        //Processor diagnostics.
-        if (cpmflag == 1){
-
-            //cpudiag //Cleared
-            //invaders = fopen("Processor diagnostics\\cpudiag\\cpudiag.bin", "rb"); memory += 0x100; //Offset memory by 0x100, since that's where cpudiag starts. Instructions begin there, and the pc should also start there.
-
-            //8080EXER
-            //invaders = fopen("Processor diagnostics\\8080EXER\\8080EXER.bin", "rb"); memory += 0x100;
-
-            //8080EXM //Cleared
-            //invaders = fopen("Processor diagnostics\\8080EXM\\8080EXM.bin", "rb"); memory += 0x100;
-
-            //8080PRE //Cleared
-            //invaders = fopen("Processor diagnostics\\8080PRE\\8080PRE.bin", "rb"); memory += 0x100;
-
-            //CPUTEST //Cleared
-            //invaders = fopen("Processor diagnostics\\CPUTEST\\CPUTEST.bin", "rb"); memory += 0x100;
-
-            //TST8080 //Cleared
-            //invaders = fopen("Processor diagnostics\\TST8080\\TST8080.bin", "rb"); memory += 0x100;
-
-            filecount = 1;
-        }
-        //Space invaders.
-        else{
-            switch (filecount){
-                case 4:
-                //Open file in read binary mode. "r" by itself would be read text, which stops 0x1B from being read (it gets read as an EOF if the file is opened in text mode).
-                invaders = fopen("Place Game ROMs Here\\Invaders.h", "rb");
-                if (invaders == NULL){ printf("Error: Invaders.h file not found!");}
-                break;
-                case 3:
-                invaders = fopen("Place Game ROMs Here\\Invaders.g", "rb");
-                if (invaders == NULL){ printf("Error: Invaders.g file not found!");}
-                break;
-                case 2:
-                invaders = fopen("Place Game ROMs Here\\Invaders.f", "rb");
-                if (invaders == NULL){ printf("Error: Invaders.f file not found!");}
-                break;
-                case 1:
-                invaders = fopen("Place Game ROMs Here\\Invaders.e", "rb");
-                if (invaders == NULL){ printf("Error: Invaders.e file not found!");}
-                break;
-            }
-        }
-        //Load the entire file into memory. Start by finding the end of the file.
-        if (fseek(invaders, 0L, SEEK_END) == 0){
-            //Get the current position (position at the end of the file). Remember it so that we know how much memory to allocate for storage.
-            filesize = ftell(invaders);
-
-            //Error checking.
-            if (filesize == -1){ printf("Error: could not create buffer size!\n"); }
-
-            //Go back to the start of the file.
-            if (fseek(invaders, 0L, SEEK_SET) != 0){ printf("Error: could not set the file pointer to the start of the file!\n"); }
-
-            //Read the entire file into memory (into the buffer).
-            fread(memory + memOffset, sizeof(uint8_t), filesize, invaders);
-            memOffset += filesize;
-        }
-        filecount--;
-    }
-
-    fclose(invaders);
-
-    return memOffset;
 }
 
 void Disassemble8080OpToFile(unsigned char *codebuffer, int pc, FILE *output){

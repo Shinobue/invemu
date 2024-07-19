@@ -8,6 +8,8 @@
 #include "InvadersMachine.h"
 #include <SDL.h>
 
+int LoadFile(uint8_t *);
+
 const int fileoutputflag = 0;
 const int printflag = 0;
 const int cpmflag = 0;
@@ -51,14 +53,9 @@ int main(int argc, char *argv[]){
     SDL_Texture *Game = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_STREAMING, 256, 224); //Use Stream for real emulation.
 
     //Temporary, print info to cmd.
-    while (i < 32){
-        printf("%02x ", state->memory[i]);
-        i += 1;
-    }
-    printf("\nRAMoffset = %d\n\n\n", RAMoffset);
+//    printf("\nRAMoffset = %d\n\n\n", RAMoffset);
 
-    i = 0;
-
+    //For debugging.
     if (printflag){printf(" Ins#   pc   op  mnem   byte(s)\n");}
 
     //Create output file if applicable.
@@ -66,8 +63,11 @@ int main(int argc, char *argv[]){
         output = fopen("output.txt", "w");
         fprintf(output, " Ins#   pc   op  mnem   byte(s)\n"); //Also print to file if flag enabled.
     }
+
+    i = 0;
+
     //while (state->pc != 0){ //For CPU diagnostics.
-    while (i < 500000000){
+    while (1){
         //CPU Diagnostics
         if (cpmflag && state->pc == 5){
             int z = 0;
@@ -144,4 +144,81 @@ int main(int argc, char *argv[]){
     SDL_DestroyTexture(Game);
     SDL_DestroyRenderer(renderer);
     SDL_Quit();
+}
+
+int LoadFile(uint8_t *memory){
+    FILE *invaders;
+    long int filesize;
+    unsigned char *buffer;
+    int filecount = 4;
+    int memOffset = 0;
+
+    while (filecount > 0){
+        //Processor diagnostics.
+        if (cpmflag == 1){
+
+            //cpudiag //Cleared
+            //invaders = fopen("Processor diagnostics\\cpudiag\\cpudiag.bin", "rb"); memory += 0x100; //Offset memory by 0x100, since that's where cpudiag starts. Instructions begin there, and the pc should also start there.
+
+            //8080EXER
+            //invaders = fopen("Processor diagnostics\\8080EXER\\8080EXER.bin", "rb"); memory += 0x100;
+
+            //8080EXM //Cleared
+            //invaders = fopen("Processor diagnostics\\8080EXM\\8080EXM.bin", "rb"); memory += 0x100;
+
+            //8080PRE //Cleared
+            //invaders = fopen("Processor diagnostics\\8080PRE\\8080PRE.bin", "rb"); memory += 0x100;
+
+            //CPUTEST //Cleared
+            //invaders = fopen("Processor diagnostics\\CPUTEST\\CPUTEST.bin", "rb"); memory += 0x100;
+
+            //TST8080 //Cleared
+            //invaders = fopen("Processor diagnostics\\TST8080\\TST8080.bin", "rb"); memory += 0x100;
+
+            filecount = 1;
+        }
+        //Space invaders.
+        else{
+            switch (filecount){
+                case 4:
+                //Open file in read binary mode. "r" by itself would be read text, which stops 0x1B from being read (it gets read as an EOF if the file is opened in text mode).
+                invaders = fopen("Place Game ROMs Here\\Invaders.h", "rb");
+                if (invaders == NULL){ printf("Error: Invaders.h file not found!");}
+                break;
+                case 3:
+                invaders = fopen("Place Game ROMs Here\\Invaders.g", "rb");
+                if (invaders == NULL){ printf("Error: Invaders.g file not found!");}
+                break;
+                case 2:
+                invaders = fopen("Place Game ROMs Here\\Invaders.f", "rb");
+                if (invaders == NULL){ printf("Error: Invaders.f file not found!");}
+                break;
+                case 1:
+                invaders = fopen("Place Game ROMs Here\\Invaders.e", "rb");
+                if (invaders == NULL){ printf("Error: Invaders.e file not found!");}
+                break;
+            }
+        }
+        //Load the entire file into memory. Start by finding the end of the file.
+        if (fseek(invaders, 0L, SEEK_END) == 0){
+            //Get the current position (position at the end of the file). Remember it so that we know how much memory to allocate for storage.
+            filesize = ftell(invaders);
+
+            //Error checking.
+            if (filesize == -1){ printf("Error: could not create buffer size!\n"); }
+
+            //Go back to the start of the file.
+            if (fseek(invaders, 0L, SEEK_SET) != 0){ printf("Error: could not set the file pointer to the start of the file!\n"); }
+
+            //Read the entire file into memory (into the buffer).
+            fread(memory + memOffset, sizeof(uint8_t), filesize, invaders);
+            memOffset += filesize;
+        }
+        filecount--;
+    }
+
+    fclose(invaders);
+
+    //Address where the RAM starts.
+    return memOffset;
 }
