@@ -174,6 +174,7 @@ void ProcessorOUT(State8080* state, uint8_t port){
         Mix_MasterVolume(40);
         Mix_VolumeMusic(40);
 
+        //Get the previous value in the sound 3 port. If the relevant bit has gone from 0 to 1, play a sound.
         static uint8_t prevSoundPort3 = 0;
 
         //UFO sound. Loops until destroyed or it disappears.
@@ -351,13 +352,6 @@ void Render(State8080 *state, SDL_Window *window, SDL_Renderer *renderer, SDL_Te
         }
     }
 
-
-    //Clear screen
-    //SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
-    //SDL_SetRenderTarget(renderer, NULL);
-    //SDL_RenderClear(renderer);
-    //SDL_RenderPresent(renderer);
-
     SDL_Rect screen;
     screen.x = 0;
     screen.y = 0;
@@ -371,7 +365,6 @@ void Render(State8080 *state, SDL_Window *window, SDL_Renderer *renderer, SDL_Te
     SDL_SetRenderTarget(renderer, Game);
     SDL_UpdateTexture(Game, &screen, pixels, 1024);
     SDL_SetRenderTarget(renderer, NULL);
-    //SDL_RenderCopy(renderer, Game, NULL, &screen);
     SDL_RenderCopyEx(renderer, Game, NULL, &screen, -90, &corner, 0);
     SDL_RenderPresent(renderer);
 }

@@ -53,9 +53,6 @@ int main(int argc, char *argv[]){
     SDL_Renderer *renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
     SDL_Texture *Game = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_STREAMING, 256, 224); //Use Stream for real emulation.
 
-    //Temporary, print info to cmd.
-    printf("\nRAMoffset = %04X\n\n\n", RAMoffset);
-
     //For debugging.
     if (printflag){printf(" Ins#   pc   op  mnem   byte(s)\n");}
 
@@ -128,14 +125,6 @@ int main(int argc, char *argv[]){
         i++;
     }
     Render(state, window, renderer, Game);
-
-    //Print VRAM values
-//    i = 0x2400;
-//    while (i < 0x4000){
-//        if (state->memory[i] != 0)
-//            printf("x %d, y %d: %X\n", (i - 0x2400) / 32, (i - 0x2400) % 32, state->memory[i]);
-//        i++;
-//    }
 
     //Clear memory.
     free(state->memory);
