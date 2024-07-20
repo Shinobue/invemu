@@ -2760,13 +2760,35 @@ void Emulate8080Op(State8080* state, FILE *output){
 }
 
 void MemWrite(State8080* state, uint16_t location, uint8_t value){
+    /*
+    Value conversion (bytes):
+    1k = 1024 = 0x400
+    7k = 7168 = 0x1c00
+    8k = 8192 = 0x2000
+    16k = 16384 = 0x4000
+
+    Memory map for Space Invaders:
+    0x0000 - 0x1FFF = ROM
+    0x2000 - 0x23FF = Work RAM
+    0x2400 - 0x3FFF = Video RAM
+    0x4000+ Memory mirror (goes back to RAM).
+
+    First 8k is ROM. Must not be modified.
+    Next 8k is RAM (of which 1k is work RAM, 7k is VRAM).
+    Any attempt to write to a location at or above 0x2000 + 0x2000 = 0x4000 should instead write to RAM, since ram ends at 0x3FFF.
+    Since RAM is 8k in size, mask off everything above 0x1FFF (8k contains values from 0x0000 - 0x1FFF), then add 0x2000, since you need to offset the location from ROM.
+    By doing this, you will essentially get the modulus 8192 of that location, and then write to that location in RAM.
+    So if the program attempts to write at location 0x5132, AND that with 0x1FFF which equals 0x1132, then add that to 0x2000 which equals RAM location 0x3132.
+
+    Note: If using this processor emulator for non-space invaders emulation, this function may need to be changed.
+    */
+
     if (location < RAMoffset && cpmflag == 0){
-        printf("Error: program attempts to write into ROM! Memory write was attempted at: %04X using the value %02X\n", location, value);
+        //printf("Error: program attempts to write into ROM! Memory write was attempted at: %04X using the value %02X\n", location, value);
     }
-    //Note: If using this processor emulator for a non-space invaders emulator, this may need to be changed.
     else if (location >= 0x4000 && cpmflag == 0){
-        printf("Program attempts to write outside of RAM space @ %04X, mirroring to RAM location %04X...\n", location, location & 0x3FFF);
-        state->memory[location & 0x3FFF] = value;
+        //printf("Program attempts to write outside of RAM space @ %04X, mirroring to RAM location %04X...\n", location, (location & 0x1FFF) + 0x2000);
+        state->memory[(location & 0x1FFF) + 0x2000] = value;
     }
     else{
         state->memory[location] = value;
