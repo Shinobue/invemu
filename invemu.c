@@ -173,19 +173,19 @@ int LoadFile(uint8_t *memory){
                 case 4:
                 //Open file in read binary mode. "r" by itself would be read text, which stops 0x1B from being read (it gets read as an EOF if the file is opened in text mode).
                 invaders = fopen("Place Game ROMs Here\\Invaders.h", "rb");
-                if (invaders == NULL){ printf("Error: Invaders.h file not found!");}
+                if (invaders == NULL){ printf("Error: Invaders.h file not found!\n");}
                 break;
                 case 3:
                 invaders = fopen("Place Game ROMs Here\\Invaders.g", "rb");
-                if (invaders == NULL){ printf("Error: Invaders.g file not found!");}
+                if (invaders == NULL){ printf("Error: Invaders.g file not found!\n");}
                 break;
                 case 2:
                 invaders = fopen("Place Game ROMs Here\\Invaders.f", "rb");
-                if (invaders == NULL){ printf("Error: Invaders.f file not found!");}
+                if (invaders == NULL){ printf("Error: Invaders.f file not found!\n");}
                 break;
                 case 1:
                 invaders = fopen("Place Game ROMs Here\\Invaders.e", "rb");
-                if (invaders == NULL){ printf("Error: Invaders.e file not found!");}
+                if (invaders == NULL){ printf("Error: Invaders.e file not found!\n");}
                 break;
             }
         }
